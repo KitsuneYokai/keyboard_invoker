@@ -66,7 +66,7 @@ class MethodChannelKeyboardInvoker extends KeyboardInvokerPlatform {
 
     if (Platform.isWindows) {
       for (var key in keys) {
-        if (key["LogicalKeyId"] == keyCode) {
+        if (key["logicalKeyId"] == keyCode) {
           keyCode = key["windowsValue"];
           break;
         }
@@ -74,7 +74,7 @@ class MethodChannelKeyboardInvoker extends KeyboardInvokerPlatform {
     }
     if (Platform.isMacOS) {
       for (var key in keys) {
-        if (key["LogicalKeyId"] == keyCode) {
+        if (key["logicalKeyId"] == keyCode) {
           keyCode = key["macOSValue"];
           break;
         }
@@ -101,7 +101,7 @@ class MethodChannelKeyboardInvoker extends KeyboardInvokerPlatform {
 
     if (Platform.isWindows) {
       for (var key in keys) {
-        if (key["LogicalKeyId"] == keyCode) {
+        if (key["logicalKeyId"] == keyCode) {
           keyCode = key["windowsValue"];
           break;
         }
@@ -109,7 +109,7 @@ class MethodChannelKeyboardInvoker extends KeyboardInvokerPlatform {
     }
     if (Platform.isMacOS) {
       for (var key in keys) {
-        if (key["LogicalKeyId"] == keyCode) {
+        if (key["logicalKeyId"] == keyCode) {
           keyCode = key["macOSValue"];
           break;
         }
