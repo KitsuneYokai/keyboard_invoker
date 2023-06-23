@@ -5,20 +5,20 @@ import Foundation
 import AppKit
 
 // variables to store the key codes for the modifier keys
-let kVK_Shift: Int = 8589935090
-let kVK_Control: Int = 8589935088
-let kVK_Option: Int = 8589935092
+let kVK_Shift: Int = 56
+let kVK_Control: Int = 59
+let kVK_Option: Int = 58
 let kVK_Command: Int = 8589935094
 
-let kVK_LeftShift: Int = 8589934850
-let kVK_LeftControl: Int = 8589934848
-let kVK_LeftOption: Int =  8589934852
-let kVK_LeftCommand: Int = 8589934854
+let kVK_LeftShift: Int = 56
+let kVK_LeftControl: Int = 59
+let kVK_LeftOption: Int =  58
+let kVK_LeftCommand: Int = 55
 
-let kVK_RightShift: Int = 8589934851
-let kVK_RightControl: Int = 8589934849
-let kVK_RightOption: Int = 8589934853
-let kVK_RightCommand: Int = 8589934855
+let kVK_RightShift: Int = 60
+let kVK_RightControl: Int = 62
+let kVK_RightOption: Int = 61
+let kVK_RightCommand: Int = 54
 
 var heldKeys: [Int] = []
 
@@ -46,7 +46,7 @@ func showAccessibilityPermissionDialog() {
     let response: NSApplication.ModalResponse = alert.runModal()
 
     if response == .alertFirstButtonReturn {
-        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
+        if let url: URL = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
             NSWorkspace.shared.open(url)
         }
     }
@@ -67,8 +67,6 @@ public class KeyboardInvokerPlugin: NSObject, FlutterPlugin {
 
     // case to invoke a key press 
     case "invokeKey":
-      print("heldKey: \(heldKeys)") // Print the value of heldKey
-
       // Check accessibility permissions
       guard hasAccessibilityPermissions() else {
         // show the accessibility permissions dialog
