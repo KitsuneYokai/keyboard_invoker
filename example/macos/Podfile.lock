@@ -1,0 +1,22 @@
+PODS:
+  - FlutterMacOS (1.0.0)
+  - keyboard_invoker (0.0.1):
+    - FlutterMacOS
+
+DEPENDENCIES:
+  - FlutterMacOS (from `Flutter/ephemeral`)
+  - keyboard_invoker (from `Flutter/ephemeral/.symlinks/plugins/keyboard_invoker/macos`)
+
+EXTERNAL SOURCES:
+  FlutterMacOS:
+    :path: Flutter/ephemeral
+  keyboard_invoker:
+    :path: Flutter/ephemeral/.symlinks/plugins/keyboard_invoker/macos
+
+SPEC CHECKSUMS:
+  FlutterMacOS: 8f6f14fa908a6fb3fba0cd85dbd81ec4b251fb24
+  keyboard_invoker: 6161f4ad66c75c5b11a9d05e8cc6458d658b1780
+
+PODFILE CHECKSUM: 236401fc2c932af29a9fcf0e97baeeb2d750d367
+
+COCOAPODS: 1.11.3

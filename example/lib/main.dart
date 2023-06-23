@@ -120,7 +120,12 @@ class _MyAppState extends State<MyApp> {
                         _focusNode.requestFocus();
                         // invoking the macro
                         for (var macro in macroRecording) {
-                          await _keyboardInvokerPlugin.invokeKey(macro);
+                          final result =
+                              await _keyboardInvokerPlugin.invokeKey(macro);
+                          if (!result) {
+                            print("Error invoking macro");
+                            break;
+                          }
                         }
                       },
                       child: const Text("invoke macro")),
@@ -131,14 +136,19 @@ class _MyAppState extends State<MyApp> {
                         _focusNode.requestFocus();
                         // hold down the shift key before invoking the macro
                         await _keyboardInvokerPlugin
-                            .holdKey(LogicalKeyboardKey.shiftLeft.keyId);
+                            .holdKey(LogicalKeyboardKey.shift.keyId);
                         // invoking the macro
                         for (var macro in macroRecording) {
-                          await _keyboardInvokerPlugin.invokeKey(macro);
+                          final result =
+                              await _keyboardInvokerPlugin.invokeKey(macro);
+                          if (!result) {
+                            print("Error invoking macro");
+                            break;
+                          }
                         }
                         // releasing the shift key after invoking the macro
                         await _keyboardInvokerPlugin
-                            .releaseKey(LogicalKeyboardKey.shiftLeft.keyId);
+                            .releaseKey(LogicalKeyboardKey.shift.keyId);
                       },
                       child: const Text("Test modifier (shift)"))
                 ],

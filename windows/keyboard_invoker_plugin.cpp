@@ -93,7 +93,7 @@ namespace keyboard_invoker
           ip.ki.dwFlags = KEYEVENTF_KEYUP;
           SendInput(1, &ip, sizeof(INPUT));
 
-          result->Success(flutter::EncodableValue("Invoked key"));
+          result->Success(flutter::EncodableValue(true));
         }
         else
         {
@@ -128,7 +128,7 @@ namespace keyboard_invoker
           ip.ki.dwFlags = 0;
           SendInput(1, &ip, sizeof(INPUT));
 
-          result->Success(flutter::EncodableValue("Invoked key"));
+          result->Success(flutter::EncodableValue(true));
         }
         else
         {
@@ -160,11 +160,10 @@ namespace keyboard_invoker
           ip.ki.dwExtraInfo = 0;
           ip.ki.wVk = static_cast<WORD>(keyCode);
 
-          // Press the "A" key
           ip.ki.dwFlags = KEYEVENTF_KEYUP;
           SendInput(1, &ip, sizeof(INPUT));
 
-          result->Success(flutter::EncodableValue("Invoked key"));
+          result->Success(flutter::EncodableValue(true));
         }
         else
         {
