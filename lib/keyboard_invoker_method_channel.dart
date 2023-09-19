@@ -25,7 +25,7 @@ class MethodChannelKeyboardInvoker extends KeyboardInvokerPlatform {
   // invokeKey is responsible for invoking the key (press and release),
   // if you want to invoke a modifier key, you need to call the holdKey method
   @override
-  Future<bool> invokeKey(int keyCode) async {
+  Future<bool> invokeKey(var keyCode) async {
     List keys = key_mappings.keyMapping;
 
     if (Platform.isWindows) {
@@ -45,11 +45,15 @@ class MethodChannelKeyboardInvoker extends KeyboardInvokerPlatform {
       }
     }
     if (Platform.isLinux) {
-      // https://manpages.ubuntu.com/manpages/impish/man7/virkeycode-linux.7.html
+      for (var key in keys) {
+        if (key["logicalKeyId"] == keyCode) {
+          keyCode = key["linuxValue"];
+          break;
+        }
+      }
     }
     final response = await methodChannel
         .invokeMethod<bool>('invokeKey', <String, dynamic>{"keyCode": keyCode});
-
     if (response != null && response == true) {
       return true;
     } else {
@@ -61,7 +65,7 @@ class MethodChannelKeyboardInvoker extends KeyboardInvokerPlatform {
   // it is useful for modifier keys(shift, ctrl, alt, etc) and for keys that
   // need to be held for a long time
   @override
-  Future<bool> holdKey(int keyCode) async {
+  Future<bool> holdKey(var keyCode) async {
     List keys = key_mappings.keyMapping;
 
     if (Platform.isWindows) {
@@ -81,7 +85,12 @@ class MethodChannelKeyboardInvoker extends KeyboardInvokerPlatform {
       }
     }
     if (Platform.isLinux) {
-      // https://manpages.ubuntu.com/manpages/impish/man7/virkeycode-linux.7.html
+      for (var key in keys) {
+        if (key["logicalKeyId"] == keyCode) {
+          keyCode = key["linuxValue"];
+          break;
+        }
+      }
     }
     final response = await methodChannel
         .invokeMethod<bool>('holdKey', <String, dynamic>{"keyCode": keyCode});
@@ -96,7 +105,7 @@ class MethodChannelKeyboardInvoker extends KeyboardInvokerPlatform {
   // it is useful for modifier keys(shift, ctrl, alt, etc) and for keys that
   // need to be held for a long time
   @override
-  Future<bool> releaseKey(int keyCode) async {
+  Future<bool> releaseKey(var keyCode) async {
     List keys = key_mappings.keyMapping;
 
     if (Platform.isWindows) {
@@ -116,7 +125,12 @@ class MethodChannelKeyboardInvoker extends KeyboardInvokerPlatform {
       }
     }
     if (Platform.isLinux) {
-      // https://manpages.ubuntu.com/manpages/impish/man7/virkeycode-linux.7.html
+      for (var key in keys) {
+        if (key["logicalKeyId"] == keyCode) {
+          keyCode = key["linuxValue"] as String;
+          break;
+        }
+      }
     }
     final response = await methodChannel.invokeMethod<bool>(
         'releaseKey', <String, dynamic>{"keyCode": keyCode});

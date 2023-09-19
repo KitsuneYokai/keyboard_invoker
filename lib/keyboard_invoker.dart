@@ -5,15 +5,15 @@ class KeyboardInvoker {
     return KeyboardInvokerPlatform.instance.getPlatformVersion();
   }
 
-  Future<bool> invokeKey(int keyCode) async {
+  Future<bool> invokeKey(var keyCode) async {
     return KeyboardInvokerPlatform.instance.invokeKey(keyCode);
   }
 
-  Future<bool> holdKey(int keyCode) async {
+  Future<bool> holdKey(var keyCode) async {
     return KeyboardInvokerPlatform.instance.holdKey(keyCode);
   }
 
-  Future<bool> releaseKey(int keyCode) async {
+  Future<bool> releaseKey(var keyCode) async {
     return KeyboardInvokerPlatform.instance.releaseKey(keyCode);
   }
 }

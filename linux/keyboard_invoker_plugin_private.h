@@ -1,4 +1,5 @@
 #include <flutter_linux/flutter_linux.h>
+#include <string>
 
 #include "include/keyboard_invoker/keyboard_invoker_plugin.h"
 
@@ -8,3 +9,4 @@
 
 // Handles the getPlatformVersion method call.
 FlMethodResponse *get_platform_version();
+FlMethodResponse *invoke_key(const char* keyCode);

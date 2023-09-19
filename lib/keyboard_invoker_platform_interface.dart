@@ -27,17 +27,17 @@ abstract class KeyboardInvokerPlatform extends PlatformInterface {
     throw UnimplementedError('platformVersion() has not been implemented.');
   }
 
-  Future<bool> invokeKey(int keyCode) {
+  Future<bool> invokeKey(var keyCode) {
     return Future.error(
         'invokeKey() has not been implemented on this platform yet.');
   }
 
-  Future<bool> holdKey(int keyCode) {
+  Future<bool> holdKey(var keyCode) {
     return Future.error(
         'holdKey() has not been implemented on this platform yet.');
   }
 
-  Future<bool> releaseKey(int keyCode) {
+  Future<bool> releaseKey(var keyCode) {
     return Future.error(
         'releaseKey() has not been implemented on this platform yet.');
   }
