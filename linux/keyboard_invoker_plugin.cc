@@ -40,6 +40,24 @@ static void keyboard_invoker_plugin_handle_method_call(
     // convert the keyCode to int
     response = invoke_key(fl_value_get_string(keyCodeValue));
   }
+  else if (strcmp(method, "holdKey") == 0)
+  {
+    // get the arguments
+    FlValue *args = fl_method_call_get_args(method_call);
+    // get the keyCode as string 
+    FlValue *keyCodeValue = fl_value_lookup_string(args, "keyCode");
+    // convert the keyCode to int
+    response = hold_key(fl_value_get_string(keyCodeValue));
+  }
+  else if (strcmp(method, "releaseKey") == 0)
+  {
+    // get the arguments
+    FlValue *args = fl_method_call_get_args(method_call);
+    // get the keyCode as string 
+    FlValue *keyCodeValue = fl_value_lookup_string(args, "keyCode");
+    // convert the keyCode to int
+    response = release_key(fl_value_get_string(keyCodeValue));
+  }
   else
   {
     response = FL_METHOD_RESPONSE(fl_method_not_implemented_response_new());
@@ -55,7 +73,7 @@ FlMethodResponse *get_platform_version()
   g_autoptr(FlValue) result = fl_value_new_string(version);
   return FL_METHOD_RESPONSE(fl_method_success_response_new(result));
 }
-
+// TODO: make this better
 FlMethodResponse *invoke_key(const char* keyCode)
 {
     // Execute the system command
@@ -65,20 +83,64 @@ FlMethodResponse *invoke_key(const char* keyCode)
 
     if (result == 0)
     {
-        // Command executed successfully; you can return a success response here
+        // return true if the command was executed successfully
         g_autoptr(FlValue) result = fl_value_new_bool(true);
         FlMethodResponse *response = FL_METHOD_RESPONSE(fl_method_success_response_new(result));
         return response;
     }
     else
     {
-        // Command execution failed; return an error response with a message
+        // return false if the command failed
         g_autoptr(FlValue) result = fl_value_new_bool(false);
         FlMethodResponse *response = FL_METHOD_RESPONSE(fl_method_success_response_new(result));
         return response;
     }
 }
 
+FlMethodResponse *hold_key(const char* keyCode)
+{
+    // Execute the system command
+    std::string command = "xdotool keydown ";
+    command += keyCode;
+    int result = system(command.c_str());
+
+    if (result == 0)
+    {
+        // return true if the command was executed successfully
+        g_autoptr(FlValue) result = fl_value_new_bool(true);
+        FlMethodResponse *response = FL_METHOD_RESPONSE(fl_method_success_response_new(result));
+        return response;
+    }
+    else
+    {
+        // return false if the command failed
+        g_autoptr(FlValue) result = fl_value_new_bool(false);
+        FlMethodResponse *response = FL_METHOD_RESPONSE(fl_method_success_response_new(result));
+        return response;
+    }
+}
+FlMethodResponse *release_key(const char* keyCode)
+{
+    // Execute the system command
+    std::string command = "xdotool keyup ";
+    command += keyCode;
+    int result = system(command.c_str());
+
+    if (result == 0)
+    {
+        // return true if the command was executed successfully
+        g_autoptr(FlValue) result = fl_value_new_bool(true);
+        FlMethodResponse *response = FL_METHOD_RESPONSE(fl_method_success_response_new(result));
+        return response;
+    }
+    else
+    {
+        // return false if the command failed
+        g_autoptr(FlValue) result = fl_value_new_bool(false);
+        FlMethodResponse *response = FL_METHOD_RESPONSE(fl_method_success_response_new(result));
+        return response;
+    }
+}
 static void keyboard_invoker_plugin_dispose(GObject *object)
 {
   G_OBJECT_CLASS(keyboard_invoker_plugin_parent_class)->dispose(object);

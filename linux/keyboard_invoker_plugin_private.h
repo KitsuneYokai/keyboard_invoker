@@ -10,3 +10,6 @@
 // Handles the getPlatformVersion method call.
 FlMethodResponse *get_platform_version();
 FlMethodResponse *invoke_key(const char* keyCode);
+FlMethodResponse *hold_key(const char* keyCode);
+FlMethodResponse *release_key(const char* keyCode);
+
