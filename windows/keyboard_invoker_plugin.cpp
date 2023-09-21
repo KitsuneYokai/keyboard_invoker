@@ -75,23 +75,13 @@ namespace keyboard_invoker
       {
         const auto *arguments = std::get_if<flutter::EncodableMap>(method_call.arguments());
 
-        flutter::EncodableValue keyCodeValue = (arguments->find(flutter::EncodableValue("keyCode")))->second;
+        flutter::EncodableValue keyCodeValue = arguments->find(flutter::EncodableValue("keyCode"))->second;
         if (std::holds_alternative<int32_t>(keyCodeValue))
         {
           int32_t keyCode = std::get<int32_t>(keyCodeValue);
 
-          INPUT ip{};
-          ip.type = INPUT_KEYBOARD;
-          ip.ki.wScan = 0;
-          ip.ki.time = 0;
-          ip.ki.dwExtraInfo = 0;
-
-          ip.ki.wVk = static_cast<WORD>(keyCode);
-          ip.ki.dwFlags = 0;
-          SendInput(1, &ip, sizeof(INPUT));
-
-          ip.ki.dwFlags = KEYEVENTF_KEYUP;
-          SendInput(1, &ip, sizeof(INPUT));
+          keybd_event(static_cast<BYTE>(keyCode), 0, WM_SYSKEYDOWN, 0);
+          keybd_event(static_cast<BYTE>(keyCode), 0, WM_SYSKEYUP, 0);
 
           result->Success(flutter::EncodableValue(true));
         }
@@ -102,6 +92,7 @@ namespace keyboard_invoker
         }
       }
     }
+    // handle holdKey method
     else if (method_call.method_name().compare("holdKey") == 0)
     {
       if (method_call.arguments()->IsNull())
@@ -113,21 +104,15 @@ namespace keyboard_invoker
       {
         const auto *arguments = std::get_if<flutter::EncodableMap>(method_call.arguments());
 
-        flutter::EncodableValue keyCodeValue = (arguments->find(flutter::EncodableValue("keyCode")))->second;
+        flutter::EncodableValue keyCodeValue = arguments->find(flutter::EncodableValue("keyCode"))->second;
         if (std::holds_alternative<int32_t>(keyCodeValue))
         {
           int32_t keyCode = std::get<int32_t>(keyCodeValue);
 
-          INPUT ip{};
-          ip.type = INPUT_KEYBOARD;
-          ip.ki.wScan = 0;
-          ip.ki.time = 0;
-          ip.ki.dwExtraInfo = 0;
-
-          ip.ki.wVk = static_cast<WORD>(keyCode);
-          ip.ki.dwFlags = 0;
-          SendInput(1, &ip, sizeof(INPUT));
-
+          keybd_event(static_cast<BYTE>(keyCode), 0, WM_SYSKEYDOWN , 0);
+          // for some reason, i have to release a key, else the next key invoke will not work
+          // so i release a key that is not used
+          // TODO: Look if there is a better way to do this
           result->Success(flutter::EncodableValue(true));
         }
         else
@@ -137,6 +122,7 @@ namespace keyboard_invoker
         }
       }
     }
+    // handle releaseKey method
     else if (method_call.method_name().compare("releaseKey") == 0)
     {
       if (method_call.arguments()->IsNull())
@@ -148,20 +134,12 @@ namespace keyboard_invoker
       {
         const auto *arguments = std::get_if<flutter::EncodableMap>(method_call.arguments());
 
-        flutter::EncodableValue keyCodeValue = (arguments->find(flutter::EncodableValue("keyCode")))->second;
+        flutter::EncodableValue keyCodeValue = arguments->find(flutter::EncodableValue("keyCode"))->second;
         if (std::holds_alternative<int32_t>(keyCodeValue))
         {
           int32_t keyCode = std::get<int32_t>(keyCodeValue);
 
-          INPUT ip{};
-          ip.type = INPUT_KEYBOARD;
-          ip.ki.wScan = 0;
-          ip.ki.time = 0;
-          ip.ki.dwExtraInfo = 0;
-          ip.ki.wVk = static_cast<WORD>(keyCode);
-
-          ip.ki.dwFlags = KEYEVENTF_KEYUP;
-          SendInput(1, &ip, sizeof(INPUT));
+          keybd_event(static_cast<BYTE>(keyCode), 0, WM_SYSKEYUP, 0);
 
           result->Success(flutter::EncodableValue(true));
         }

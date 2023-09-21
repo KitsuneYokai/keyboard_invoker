@@ -1,5 +1,7 @@
 import 'keyboard_invoker_platform_interface.dart';
 
+enum KeyType { keyInvoke, keyDown, keyUp }
+
 class KeyboardInvoker {
   Future<String?> getPlatformVersion() {
     return KeyboardInvokerPlatform.instance.getPlatformVersion();

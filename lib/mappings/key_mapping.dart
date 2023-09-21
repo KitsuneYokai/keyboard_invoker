@@ -11,7 +11,7 @@
 
 import 'package:flutter/services.dart';
 
-final List keyMapping = [
+final List<Map<String, dynamic>> keyMapping = [
   {
     "key": "VK_LBUTTON",
     "windowsValue": 0x01,

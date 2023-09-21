@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
-
+// import provider for the keyboard invoker
 import 'package:flutter/services.dart';
 import 'package:keyboard_invoker/keyboard_invoker.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    const MyApp(),
+  );
 }
+
+final _keyboardInvokerPlugin = KeyboardInvoker();
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
@@ -17,8 +21,11 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   String _platformVersion = 'Unknown';
-  final _keyboardInvokerPlugin = KeyboardInvoker();
   late FocusNode _focusNode;
+  final macroRecordingScrollController = ScrollController();
+
+  List<Map<String, dynamic>> _recordedKeys = [];
+  bool _isRecording = false;
 
   @override
   void initState() {
@@ -36,7 +43,7 @@ class _MyAppState extends State<MyApp> {
   }
 
   // This is the macro recording ("bratwurst und ein grosses bier")
-  List macroRecording = [
+  List testMacroRecording = [
     LogicalKeyboardKey.keyB.keyId,
     LogicalKeyboardKey.keyR.keyId,
     LogicalKeyboardKey.keyA.keyId,
@@ -90,9 +97,83 @@ class _MyAppState extends State<MyApp> {
     });
   }
 
+  // simple macro recording function
+  recordKeys(RawKeyEvent event) {
+    String keyLabel = event.logicalKey.keyLabel;
+    int keyCode = event.logicalKey.keyId;
+
+    bool isRepeat = event.repeat;
+
+    Map<String, dynamic> macroMap = {
+      "keyLabel": null,
+      "code": null,
+      "event": null,
+    };
+
+    // don't record the key if it's a repeated event
+    if (!isRepeat) {
+      // only record the modifier keys on a key down event
+      if (event is RawKeyDownEvent) {
+        if (keyLabel.toLowerCase().contains("shift") ||
+            keyLabel.toLowerCase().contains("ctrl") ||
+            keyLabel.toLowerCase().contains("alt") ||
+            keyLabel.toLowerCase().contains("meta")) {
+          macroMap["keyLabel"] = keyLabel;
+          macroMap["code"] = keyCode;
+          macroMap["event"] = KeyType.keyDown;
+
+          setState(() {
+            _recordedKeys = [..._recordedKeys, macroMap];
+          });
+        }
+        // record the keys on a key up event, so they are not held down
+      } else if (event is RawKeyUpEvent) {
+        macroMap["keyLabel"] = keyLabel;
+        macroMap["code"] = keyCode;
+        macroMap["event"] = KeyType.keyInvoke;
+
+        if (keyLabel.toLowerCase().contains("shift") ||
+            keyLabel.toLowerCase().contains("ctrl") ||
+            keyLabel.toLowerCase().contains("alt") ||
+            keyLabel.toLowerCase().contains("meta")) {
+          macroMap["event"] = KeyType.keyUp;
+        }
+        // set the state
+        setState(() {
+          _recordedKeys = [..._recordedKeys, macroMap];
+        });
+      }
+    }
+  }
+
+  startRecording() {
+    // clear the recorded keys
+    setState(() {
+      _recordedKeys = [];
+      _isRecording = true;
+    });
+    // add the listener
+    RawKeyboard.instance.addListener(recordKeys);
+  }
+
+  stopRecording() {
+    // remove the listener
+    RawKeyboard.instance.removeListener(recordKeys);
+    // set the state
+    setState(() {
+      _isRecording = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (macroRecordingScrollController.hasClients) {
+      macroRecordingScrollController.jumpTo(
+        macroRecordingScrollController.position.maxScrollExtent + 27,
+      );
+    }
     return MaterialApp(
+      title: 'Keyboard_invoker example',
       home: Scaffold(
           appBar: AppBar(
             title: const Text('Keyboard_invoker example'),
@@ -100,7 +181,7 @@ class _MyAppState extends State<MyApp> {
           body: Padding(
               padding: const EdgeInsets.all(15),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Center(
@@ -110,47 +191,118 @@ class _MyAppState extends State<MyApp> {
                     focusNode: _focusNode,
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(),
-                      labelText: 'TextField',
+                      labelText: 'Test Field',
                     ),
                   ),
+                  Text("Recording: $_isRecording"),
+                  Expanded(
+                      child: SingleChildScrollView(
+                    controller: macroRecordingScrollController,
+                    child: Column(
+                      children: _recordedKeys
+                          .map((e) => Text(
+                                "Key: ${e["keyLabel"]} Code: ${e["code"]} Event: ${e["event"]}",
+                                style: const TextStyle(fontSize: 20),
+                              ))
+                          .toList(),
+                    ),
+                  )),
                   // macro test button
-                  ElevatedButton(
-                      onPressed: () async {
-                        // focusing the text field
-                        _focusNode.requestFocus();
-                        // invoking the macro
-                        for (var macro in macroRecording) {
-                          final result =
-                              await _keyboardInvokerPlugin.invokeKey(macro);
-                          if (!result) {
-                            print("Error invoking macro");
-                            break;
-                          }
-                        }
-                      },
-                      child: const Text("invoke macro")),
-                  // modifier test button (shift hold and release)
-                  ElevatedButton(
-                      onPressed: () async {
-                        // focusing the text field
-                        _focusNode.requestFocus();
-                        // hold down the shift key before invoking the macro
-                        await _keyboardInvokerPlugin
-                            .holdKey(LogicalKeyboardKey.shift.keyId);
-                        // invoking the macro
-                        for (var macro in macroRecording) {
-                          final result =
-                              await _keyboardInvokerPlugin.invokeKey(macro);
-                          if (!result) {
-                            print("Error invoking macro");
-                            break;
-                          }
-                        }
-                        // releasing the shift key after invoking the macro
-                        await _keyboardInvokerPlugin
-                            .releaseKey(LogicalKeyboardKey.shift.keyId);
-                      },
-                      child: const Text("Test modifier (shift)"))
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      ElevatedButton(
+                          onPressed: () async {
+                            // focusing the text field
+                            _focusNode.requestFocus();
+                            // invoking the macro
+                            for (var macro in testMacroRecording) {
+                              final result =
+                                  await _keyboardInvokerPlugin.invokeKey(macro);
+                              if (!result) {
+                                print("Error invoking macro");
+                                break;
+                              }
+                            }
+                          },
+                          child: const Text("Test Macro (bratwurst)")),
+                      // modifier test button (shift hold and release)
+                      ElevatedButton(
+                          onPressed: () async {
+                            // focusing the text field
+                            _focusNode.requestFocus();
+                            // hold down the shift key before invoking the macro
+                            bool shiftModifier = await _keyboardInvokerPlugin
+                                .holdKey(LogicalKeyboardKey.shiftRight.keyId);
+                            // invoking the macro
+                            if (shiftModifier == false) {
+                              print("Error holding down shift key");
+                              return;
+                            } else {
+                              print("Holding down shift key");
+                            }
+                            for (var macro in testMacroRecording) {
+                              final result =
+                                  await _keyboardInvokerPlugin.invokeKey(macro);
+                              if (!result) {
+                                print("Error invoking macro");
+                                break;
+                              }
+                            }
+                            // releasing the shift key after invoking the macro
+                            await _keyboardInvokerPlugin.releaseKey(
+                                LogicalKeyboardKey.shiftRight.keyId);
+                          },
+                          child: const Text("Test Macro (bratwurst)(shift)"))
+                    ],
+                  ),
+
+                  // macro recording buttons
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      ElevatedButton(
+                          onPressed: _isRecording
+                              ? () {
+                                  // stop recording
+                                  stopRecording();
+                                }
+                              : () {
+                                  // start recording
+                                  startRecording();
+                                },
+                          child: _isRecording
+                              ? const Text("stop Macro Recording")
+                              : const Text("Start Macro Recording")),
+                      ElevatedButton(
+                          onPressed: () {
+                            // clear the recorded keys
+                            setState(() {
+                              _recordedKeys = [];
+                            });
+                          },
+                          child: const Text("Clear Recorded Macro")),
+                      ElevatedButton(
+                          onPressed: () {
+                            // focusing the text field
+                            _focusNode.requestFocus();
+                            // start recording
+                            //stopRecording();
+                            // invoke the recorded macro
+                            for (var macro in _recordedKeys) {
+                              if (macro["event"] == KeyType.keyDown) {
+                                _keyboardInvokerPlugin.holdKey(macro["code"]);
+                              } else if (macro["event"] == KeyType.keyUp) {
+                                _keyboardInvokerPlugin
+                                    .releaseKey(macro["code"]);
+                              } else if (macro["event"] == KeyType.keyInvoke) {
+                                _keyboardInvokerPlugin.invokeKey(macro["code"]);
+                              }
+                            }
+                          },
+                          child: const Text("Invoke Recorded Macro")),
+                    ],
+                  )
                 ],
               ))),
     );
