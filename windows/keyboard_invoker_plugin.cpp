@@ -73,82 +73,111 @@ namespace keyboard_invoker
       }
       else
       {
-        const auto *arguments = std::get_if<flutter::EncodableMap>(method_call.arguments());
+      // this is messy, but it works for now
+      const auto *arguments = std::get_if<flutter::EncodableMap>(method_call.arguments());
+      // Check if the arguments are valid
+      flutter::EncodableValue keyCodeValue = arguments->find(flutter::EncodableValue("platformKeyCode"))->second;
+      int32_t keyCode = std::get<int32_t>(keyCodeValue);
 
-        flutter::EncodableValue keyCodeValue = arguments->find(flutter::EncodableValue("keyCode"))->second;
-        if (std::holds_alternative<int32_t>(keyCodeValue))
-        {
-          int32_t keyCode = std::get<int32_t>(keyCodeValue);
+      flutter::EncodableValue leftShift = arguments->find(flutter::EncodableValue("leftShiftPressed"))->second;
+      bool shiftLeftPressed = std::get<bool>(leftShift);
 
-          keybd_event(static_cast<BYTE>(keyCode), 0, WM_SYSKEYDOWN, 0);
-          keybd_event(static_cast<BYTE>(keyCode), 0, WM_SYSKEYUP, 0);
+      flutter::EncodableValue rightShift = arguments->find(flutter::EncodableValue("rightShiftPressed"))->second;
+      bool shiftRightPressed = std::get<bool>(rightShift);
 
-          result->Success(flutter::EncodableValue(true));
-        }
-        else
-        {
-          result->Error("Invalid keyCode type");
-          return;
-        }
+      flutter::EncodableValue leftAlt = arguments->find(flutter::EncodableValue("leftAltPressed"))->second;
+      bool altLeftPressed = std::get<bool>(leftAlt);
+
+      flutter::EncodableValue rightAlt = arguments->find(flutter::EncodableValue("rightAltPressed"))->second;
+      bool altRightPressed = std::get<bool>(rightAlt);
+
+      flutter::EncodableValue leftCtrl = arguments->find(flutter::EncodableValue("leftControlPressed"))->second;
+      bool controlLeftPressed = std::get<bool>(leftCtrl);
+
+      flutter::EncodableValue rightCtrl = arguments->find(flutter::EncodableValue("rightControlPressed"))->second;
+      bool controlRightPressed = std::get<bool>(rightCtrl);
+
+      flutter::EncodableValue leftMeta = arguments->find(flutter::EncodableValue("leftMetaPressed"))->second;
+      bool metaLeftPressed = std::get<bool>(leftMeta);
+
+      flutter::EncodableValue rightMeta = arguments->find(flutter::EncodableValue("rightMetaPressed"))->second;
+      bool metaRightPressed = std::get<bool>(rightMeta);
+
+      // Simulate holding down the modifier keys
+      if (shiftLeftPressed || shiftRightPressed) {
+          INPUT shiftInput;
+          shiftInput.type = INPUT_KEYBOARD;
+          shiftInput.ki.wVk = VK_SHIFT;
+          shiftInput.ki.dwFlags = 0;
+          SendInput(1, &shiftInput, sizeof(INPUT));
       }
-    }
-    // handle holdKey method
-    else if (method_call.method_name().compare("holdKey") == 0)
-    {
-      if (method_call.arguments()->IsNull())
-      {
-        result->Error("Missing arguments");
-        return;
+
+      if (altLeftPressed || altRightPressed) {
+          INPUT altInput;
+          altInput.type = INPUT_KEYBOARD;
+          altInput.ki.wVk = VK_MENU;
+          altInput.ki.dwFlags = 0;
+          SendInput(1, &altInput, sizeof(INPUT));
       }
-      else
-      {
-        const auto *arguments = std::get_if<flutter::EncodableMap>(method_call.arguments());
 
-        flutter::EncodableValue keyCodeValue = arguments->find(flutter::EncodableValue("keyCode"))->second;
-        if (std::holds_alternative<int32_t>(keyCodeValue))
-        {
-          int32_t keyCode = std::get<int32_t>(keyCodeValue);
-
-          keybd_event(static_cast<BYTE>(keyCode), 0, WM_SYSKEYDOWN , 0);
-          // for some reason, i have to release a key, else the next key invoke will not work
-          // so i release a key that is not used
-          // TODO: Look if there is a better way to do this
-          result->Success(flutter::EncodableValue(true));
-        }
-        else
-        {
-          result->Error("Invalid keyCode type");
-          return;
-        }
+      if (controlLeftPressed || controlRightPressed) {
+          INPUT ctrlInput;
+          ctrlInput.type = INPUT_KEYBOARD;
+          ctrlInput.ki.wVk = VK_CONTROL;
+          ctrlInput.ki.dwFlags = 0;
+          SendInput(1, &ctrlInput, sizeof(INPUT));
       }
-    }
-    // handle releaseKey method
-    else if (method_call.method_name().compare("releaseKey") == 0)
-    {
-      if (method_call.arguments()->IsNull())
-      {
-        result->Error("Missing arguments");
-        return;
+
+      if (metaLeftPressed || metaRightPressed) {
+          INPUT metaInput;
+          metaInput.type = INPUT_KEYBOARD;
+          metaInput.ki.wVk = VK_LWIN; // Left Windows key
+          metaInput.ki.dwFlags = 0;
+          SendInput(1, &metaInput, sizeof(INPUT));
       }
-      else
-      {
-        const auto *arguments = std::get_if<flutter::EncodableMap>(method_call.arguments());
+        // Simulate key press with modifiers
+      INPUT keyInput;
+      keyInput.type = INPUT_KEYBOARD;
+      keyInput.ki.wVk = static_cast<WORD>(keyCode);
+      keyInput.ki.dwFlags = 0;
+      SendInput(1, &keyInput, sizeof(INPUT));
 
-        flutter::EncodableValue keyCodeValue = arguments->find(flutter::EncodableValue("keyCode"))->second;
-        if (std::holds_alternative<int32_t>(keyCodeValue))
-        {
-          int32_t keyCode = std::get<int32_t>(keyCodeValue);
-
-          keybd_event(static_cast<BYTE>(keyCode), 0, WM_SYSKEYUP, 0);
-
-          result->Success(flutter::EncodableValue(true));
-        }
-        else
-        {
-          result->Error("Invalid keyCode type");
-          return;
-        }
+      // Release the modifier keys
+      if (shiftLeftPressed || shiftRightPressed) {
+          INPUT shiftInput;
+          shiftInput.type = INPUT_KEYBOARD;
+          shiftInput.ki.wVk = VK_SHIFT;
+          shiftInput.ki.dwFlags = KEYEVENTF_KEYUP;
+          SendInput(1, &shiftInput, sizeof(INPUT));
       }
+
+      if (altLeftPressed || altRightPressed) {
+          INPUT altInput;
+          altInput.type = INPUT_KEYBOARD;
+          altInput.ki.wVk = VK_MENU;
+          altInput.ki.dwFlags = KEYEVENTF_KEYUP;
+          SendInput(1, &altInput, sizeof(INPUT));
+      }
+
+      if (controlLeftPressed || controlRightPressed) {
+          INPUT ctrlInput;
+          ctrlInput.type = INPUT_KEYBOARD;
+          ctrlInput.ki.wVk = VK_CONTROL;
+          ctrlInput.ki.dwFlags = KEYEVENTF_KEYUP;
+          SendInput(1, &ctrlInput, sizeof(INPUT));
+      }
+
+      if (metaLeftPressed || metaRightPressed) {
+          INPUT metaInput;
+          metaInput.type = INPUT_KEYBOARD;
+          metaInput.ki.wVk = VK_LWIN; // Left Windows key
+          metaInput.ki.dwFlags = KEYEVENTF_KEYUP;
+          SendInput(1, &metaInput, sizeof(INPUT));
+      }
+        // return success
+        result->Success(flutter::EncodableValue(true));
+      }
+
     }
     else
     {

@@ -22,118 +22,100 @@ class MethodChannelKeyboardInvoker extends KeyboardInvokerPlatform {
     return version;
   }
 
-  // invokeKey is responsible for invoking the key (press and release),
-  // if you want to invoke a modifier key, you need to call the holdKey method
+  // invoke a single key from the keyCode Map
   @override
-  Future<bool> invokeKey(var keyCode) async {
-    List keys = key_mappings.keyMapping;
+  Future<bool> invokeKey(Map<String, dynamic> keyCode) async {
+    final List<Map<String, dynamic>> platformKeyMappings =
+        key_mappings.keyMapping;
+
+    var platformKeyCode;
+
+    bool leftShiftPressed = false;
+    bool rightShiftPressed = false;
+    bool leftAltPressed = false;
+    bool rightAltPressed = false;
+    bool leftControlPressed = false;
+    bool rightControlPressed = false;
+    bool leftMetaPressed = false;
+    bool rightMetaPressed = false;
 
     if (Platform.isWindows) {
-      for (var key in keys) {
-        if (key["logicalKeyId"] == keyCode) {
-          keyCode = key["windowsValue"];
-          break;
+      // iterate through the list of key mappings and replace the keyCode with the actual key value for the specific platform
+      for (var platformKey in platformKeyMappings) {
+        if (keyCode['keyCode'] == platformKey['logicalKeyId']) {
+          platformKeyCode = platformKey['windowsValue'];
         }
       }
+      // iterate through the list of modifiers and set the modifier variables to true if the modifier is pressed
     }
-    if (Platform.isMacOS) {
-      for (var key in keys) {
-        if (key["logicalKeyId"] == keyCode) {
-          keyCode = key["macOSValue"];
-          break;
-        }
-      }
-    }
-    if (Platform.isLinux) {
-      for (var key in keys) {
-        if (key["logicalKeyId"] == keyCode) {
-          keyCode = key["linuxValue"];
-          break;
-        }
-      }
-    }
-    final response = await methodChannel
-        .invokeMethod<bool>('invokeKey', <String, dynamic>{"keyCode": keyCode});
-    if (response != null && response == true) {
-      return true;
-    } else {
-      return false;
-    }
-  }
 
-  // holdKey is responsible for holding the key (press and hold),
-  // it is useful for modifier keys(shift, ctrl, alt, etc) and for keys that
-  // need to be held for a long time
-  @override
-  Future<bool> holdKey(var keyCode) async {
-    List keys = key_mappings.keyMapping;
+    if (keyCode["modifiers"]["shiftLeft"] == true) {
+      leftShiftPressed = true;
+    }
+    if (keyCode["modifiers"]["shiftRight"] == true) {
+      rightShiftPressed = true;
+    }
+    if (keyCode["modifiers"]["altLeft"] == true) {
+      leftAltPressed = true;
+    }
+    if (keyCode["modifiers"]["altRight"] == true) {
+      rightAltPressed = true;
+    }
+    if (keyCode["modifiers"]["controlLeft"] == true) {
+      leftControlPressed = true;
+    }
+    if (keyCode["modifiers"]["controlRight"] == true) {
+      rightControlPressed = true;
+    }
+    if (keyCode["modifiers"]["metaLeft"] == true) {
+      leftMetaPressed = true;
+    }
+    if (keyCode["modifiers"]["metaRight"] == true) {
+      rightMetaPressed = true;
+    }
 
-    if (Platform.isWindows) {
-      for (var key in keys) {
-        if (key["logicalKeyId"] == keyCode) {
-          keyCode = key["windowsValue"];
-          break;
-        }
-      }
-    }
-    if (Platform.isMacOS) {
-      for (var key in keys) {
-        if (key["logicalKeyId"] == keyCode) {
-          keyCode = key["macOSValue"];
-          break;
-        }
-      }
-    }
-    if (Platform.isLinux) {
-      for (var key in keys) {
-        if (key["logicalKeyId"] == keyCode) {
-          keyCode = key["linuxValue"];
-          break;
-        }
-      }
-    }
-    final response = await methodChannel
-        .invokeMethod<bool>('holdKey', <String, dynamic>{"keyCode": keyCode});
-    if (response != null && response == true) {
-      return true;
-    } else {
-      return false;
-    }
-  }
+    print(leftMetaPressed);
+    print(rightMetaPressed);
+    print(leftControlPressed);
+    print(rightControlPressed);
+    print(leftAltPressed);
+    print(rightAltPressed);
+    print(leftShiftPressed);
+    print(rightShiftPressed);
+    print(platformKeyCode);
 
-  // releaseKey is responsible for releasing the key (release),
-  // it is useful for modifier keys(shift, ctrl, alt, etc) and for keys that
-  // need to be held for a long time
-  @override
-  Future<bool> releaseKey(var keyCode) async {
-    List keys = key_mappings.keyMapping;
-
-    if (Platform.isWindows) {
-      for (var key in keys) {
-        if (key["logicalKeyId"] == keyCode) {
-          keyCode = key["windowsValue"];
-          break;
-        }
-      }
-    }
-    if (Platform.isMacOS) {
-      for (var key in keys) {
-        if (key["logicalKeyId"] == keyCode) {
-          keyCode = key["macOSValue"];
-          break;
-        }
-      }
-    }
-    if (Platform.isLinux) {
-      for (var key in keys) {
-        if (key["logicalKeyId"] == keyCode) {
-          keyCode = key["linuxValue"] as String;
-          break;
-        }
-      }
-    }
     final response = await methodChannel.invokeMethod<bool>(
-        'releaseKey', <String, dynamic>{"keyCode": keyCode});
+      'invokeKey',
+      {
+        "platformKeyCode": platformKeyCode,
+        "leftShiftPressed": leftShiftPressed,
+        "rightShiftPressed": rightShiftPressed,
+        "leftAltPressed": leftAltPressed,
+        "rightAltPressed": rightAltPressed,
+        "leftControlPressed": leftControlPressed,
+        "rightControlPressed": rightControlPressed,
+        "leftMetaPressed": leftMetaPressed,
+        "rightMetaPressed": rightMetaPressed
+      },
+    );
+    if (response != null && response == true) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  // invoke the keys from the keyCodes List
+  @override
+  Future<bool> invokeKeyList(List<Map<String, dynamic>> keyCodes) async {
+    // final List<Map<String, dynamic>> platformKeyMappings = key_mappings.keyMapping;
+
+    if (Platform.isWindows) {
+      // invoke the keys from the keyCodes List
+    }
+
+    final response =
+        await methodChannel.invokeMethod<bool>('invokeKeyList', keyCodes);
     if (response != null && response == true) {
       return true;
     } else {
