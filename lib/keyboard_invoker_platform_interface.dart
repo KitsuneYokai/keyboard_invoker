@@ -31,9 +31,4 @@ abstract class KeyboardInvokerPlatform extends PlatformInterface {
     return Future.error(
         'invokeKey() has not been implemented on this platform yet.');
   }
-
-  Future<bool> invokeKeyList(List<Map<String, dynamic>> keyCodes) {
-    return Future.error(
-        'invokeKeys() has not been implemented on this platform yet.');
-  }
 }

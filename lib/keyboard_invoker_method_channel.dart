@@ -39,16 +39,27 @@ class MethodChannelKeyboardInvoker extends KeyboardInvokerPlatform {
     bool leftMetaPressed = false;
     bool rightMetaPressed = false;
 
+    // iterate through the list of key mappings and replace the keyCode with the actual key value for the specific platform
     if (Platform.isWindows) {
-      // iterate through the list of key mappings and replace the keyCode with the actual key value for the specific platform
       for (var platformKey in platformKeyMappings) {
         if (keyCode['keyCode'] == platformKey['logicalKeyId']) {
           platformKeyCode = platformKey['windowsValue'];
         }
       }
-      // iterate through the list of modifiers and set the modifier variables to true if the modifier is pressed
+    } else if (Platform.isMacOS) {
+      for (var platformKey in platformKeyMappings) {
+        if (keyCode['keyCode'] == platformKey['logicalKeyId']) {
+          platformKeyCode = platformKey['macOSValue'];
+        }
+      }
+    } else if (Platform.isLinux) {
+      for (var platformKey in platformKeyMappings) {
+        if (keyCode['keyCode'] == platformKey['logicalKeyId']) {
+          platformKeyCode = platformKey['linuxValue'];
+        }
+      }
     }
-
+    // iterate through the list of modifiers and set the modifier variables to true if the modifier is pressed
     if (keyCode["modifiers"]["shiftLeft"] == true) {
       leftShiftPressed = true;
     }
@@ -74,16 +85,6 @@ class MethodChannelKeyboardInvoker extends KeyboardInvokerPlatform {
       rightMetaPressed = true;
     }
 
-    print(leftMetaPressed);
-    print(rightMetaPressed);
-    print(leftControlPressed);
-    print(rightControlPressed);
-    print(leftAltPressed);
-    print(rightAltPressed);
-    print(leftShiftPressed);
-    print(rightShiftPressed);
-    print(platformKeyCode);
-
     final response = await methodChannel.invokeMethod<bool>(
       'invokeKey',
       {
@@ -98,24 +99,6 @@ class MethodChannelKeyboardInvoker extends KeyboardInvokerPlatform {
         "rightMetaPressed": rightMetaPressed
       },
     );
-    if (response != null && response == true) {
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  // invoke the keys from the keyCodes List
-  @override
-  Future<bool> invokeKeyList(List<Map<String, dynamic>> keyCodes) async {
-    // final List<Map<String, dynamic>> platformKeyMappings = key_mappings.keyMapping;
-
-    if (Platform.isWindows) {
-      // invoke the keys from the keyCodes List
-    }
-
-    final response =
-        await methodChannel.invokeMethod<bool>('invokeKeyList', keyCodes);
     if (response != null && response == true) {
       return true;
     } else {

@@ -34,10 +34,6 @@ class KeyboardInvoker extends ChangeNotifier {
     return KeyboardInvokerPlatform.instance.invokeKey(keyCode);
   }
 
-  Future<bool> invokeKeyList(List<Map<String, dynamic>> keyCodes) async {
-    return KeyboardInvokerPlatform.instance.invokeKeyList(keyCodes);
-  }
-
   // Macro Recording Functions
   Future<void> startRecording() async {
     // set the state to recording
