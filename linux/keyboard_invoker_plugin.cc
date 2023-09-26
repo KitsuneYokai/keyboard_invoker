@@ -18,7 +18,6 @@ struct _KeyboardInvokerPlugin
 
 G_DEFINE_TYPE(KeyboardInvokerPlugin, keyboard_invoker_plugin, g_object_get_type())
 
-// Called when a method call is received from Flutter.
 static void keyboard_invoker_plugin_handle_method_call(
     KeyboardInvokerPlugin *self,
     FlMethodCall *method_call)
@@ -33,36 +32,59 @@ static void keyboard_invoker_plugin_handle_method_call(
   }
   else if (strcmp(method, "invokeKey") == 0)
   {
+    // TODO: check if the active display server is X11 or wayland + check if xdotool is installed
     // get the arguments
     FlValue *args = fl_method_call_get_args(method_call);
+    
+    FlValue *leftShiftPressed = fl_value_lookup_string(args, "leftShiftPressed");
+    FlValue *rightShiftPressed = fl_value_lookup_string(args, "rightShiftPressed");
+    
+    FlValue *leftAltPressed = fl_value_lookup_string(args, "leftAltPressed");
+    FlValue *rightAltPressed = fl_value_lookup_string(args, "rightAltPressed");
+    
+    FlValue *leftControlPressed = fl_value_lookup_string(args, "leftControlPressed");
+    FlValue *rightControlPressed = fl_value_lookup_string(args, "rightControlPressed");
+
+    FlValue *leftMetaPressed = fl_value_lookup_string(args, "leftMetaPressed");
+    FlValue *rightMetaPressed = fl_value_lookup_string(args, "rightMetaPressed");
+    
     // get the keyCode as string 
-    FlValue *keyCodeValue = fl_value_lookup_string(args, "keyCode");
+    FlValue *keyCodeValue = fl_value_lookup_string(args, "platformKeyCode");
+
+    // convert the modifiers to bool 
+    bool leftShift = fl_value_get_bool(leftShiftPressed);
+    bool rightShift = fl_value_get_bool(rightShiftPressed);
+
+    bool leftAlt = fl_value_get_bool(leftAltPressed);
+    bool rightAlt = fl_value_get_bool(rightAltPressed);
+
+    bool leftControl = fl_value_get_bool(leftControlPressed);
+    bool rightControl = fl_value_get_bool(rightControlPressed);
+
+    bool leftMeta = fl_value_get_bool(leftMetaPressed);
+    bool rightMeta = fl_value_get_bool(rightMetaPressed);
+
     // convert the keyCode to int
-    response = invoke_key(fl_value_get_string(keyCodeValue));
-  }
-  else if (strcmp(method, "holdKey") == 0)
-  {
-    // get the arguments
-    FlValue *args = fl_method_call_get_args(method_call);
-    // get the keyCode as string 
-    FlValue *keyCodeValue = fl_value_lookup_string(args, "keyCode");
-    // convert the keyCode to int
-    response = hold_key(fl_value_get_string(keyCodeValue));
-  }
-  else if (strcmp(method, "releaseKey") == 0)
-  {
-    // get the arguments
-    FlValue *args = fl_method_call_get_args(method_call);
-    // get the keyCode as string 
-    FlValue *keyCodeValue = fl_value_lookup_string(args, "keyCode");
-    // convert the keyCode to int
-    response = release_key(fl_value_get_string(keyCodeValue));
+    response = invoke_key(fl_value_get_string(keyCodeValue), leftShift, rightShift, leftAlt, rightAlt, leftControl, rightControl, leftMeta, rightMeta);
   }
   else
   {
     response = FL_METHOD_RESPONSE(fl_method_not_implemented_response_new());
   }
   fl_method_call_respond(method_call, response, nullptr);
+}
+
+static void hold_key(const char* keyCode)
+{
+    std::string command = "xdotool keydown ";
+    command += keyCode;
+    system(command.c_str());
+}
+
+static void release_modifiers()
+{
+    std::string command = "xdotool keyup Shift_L Shift_R Alt_L Alt_R Control_L Control_R Meta_L Meta_R";
+    system(command.c_str());
 }
 
 FlMethodResponse *get_platform_version()
@@ -73,10 +95,52 @@ FlMethodResponse *get_platform_version()
   g_autoptr(FlValue) result = fl_value_new_string(version);
   return FL_METHOD_RESPONSE(fl_method_success_response_new(result));
 }
-// TODO: make this better
-FlMethodResponse *invoke_key(const char* keyCode)
+
+FlMethodResponse *invoke_key(const char* keyCode,
+                             const bool leftShift,
+                             const bool rightShift,
+                             const bool leftAlt,
+                             const bool rightAlt,
+                             const bool leftControl,
+                             const bool rightControl,
+                             const bool leftMeta,
+                             const bool rightMeta)
 {
-    // Execute the system command
+    // hold down the modifiers
+    if (leftShift)
+    {
+        hold_key("Shift_L");
+    }
+    if (rightShift)
+    {
+        hold_key("Shift_R");
+    }
+    if (leftAlt)
+    {
+        hold_key("Alt_L");
+    }
+    if (rightAlt)
+    {
+        hold_key("Alt_R");
+    }
+    if (leftControl)
+    {
+        hold_key("Control_L");
+    }
+    if (rightControl)
+    {
+        hold_key("Control_R");
+    }
+    if (leftMeta)
+    {
+        hold_key("Meta_L");
+    }
+    if (rightMeta)
+    {
+        hold_key("Meta_R");
+    }
+    
+    // Execute the key event
     std::string command = "xdotool key ";
     command += keyCode;
     int result = system(command.c_str());
@@ -86,61 +150,18 @@ FlMethodResponse *invoke_key(const char* keyCode)
         // return true if the command was executed successfully
         g_autoptr(FlValue) result = fl_value_new_bool(true);
         FlMethodResponse *response = FL_METHOD_RESPONSE(fl_method_success_response_new(result));
+        release_modifiers();
         return response;
     }
     else
     {
-        // return false if the command failed
         g_autoptr(FlValue) result = fl_value_new_bool(false);
         FlMethodResponse *response = FL_METHOD_RESPONSE(fl_method_success_response_new(result));
+        release_modifiers();
         return response;
     }
 }
 
-FlMethodResponse *hold_key(const char* keyCode)
-{
-    // Execute the system command
-    std::string command = "xdotool keydown ";
-    command += keyCode;
-    int result = system(command.c_str());
-
-    if (result == 0)
-    {
-        // return true if the command was executed successfully
-        g_autoptr(FlValue) result = fl_value_new_bool(true);
-        FlMethodResponse *response = FL_METHOD_RESPONSE(fl_method_success_response_new(result));
-        return response;
-    }
-    else
-    {
-        // return false if the command failed
-        g_autoptr(FlValue) result = fl_value_new_bool(false);
-        FlMethodResponse *response = FL_METHOD_RESPONSE(fl_method_success_response_new(result));
-        return response;
-    }
-}
-FlMethodResponse *release_key(const char* keyCode)
-{
-    // Execute the system command
-    std::string command = "xdotool keyup ";
-    command += keyCode;
-    int result = system(command.c_str());
-
-    if (result == 0)
-    {
-        // return true if the command was executed successfully
-        g_autoptr(FlValue) result = fl_value_new_bool(true);
-        FlMethodResponse *response = FL_METHOD_RESPONSE(fl_method_success_response_new(result));
-        return response;
-    }
-    else
-    {
-        // return false if the command failed
-        g_autoptr(FlValue) result = fl_value_new_bool(false);
-        FlMethodResponse *response = FL_METHOD_RESPONSE(fl_method_success_response_new(result));
-        return response;
-    }
-}
 static void keyboard_invoker_plugin_dispose(GObject *object)
 {
   G_OBJECT_CLASS(keyboard_invoker_plugin_parent_class)->dispose(object);
