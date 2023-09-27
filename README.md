@@ -10,9 +10,9 @@
 
 ## Platform Support
 
-|Windows|Linux|MacOS|
-|:---:|:---:||:---:|
-|✔️|✔️||✔️|
+|Windows |Linux|MacOS|
+|:---:|:---:|:---: |
+|✔️|✔️|✔️|
 
 ## Getting Started
 
