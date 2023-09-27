@@ -2,7 +2,6 @@
 
 // This must be included before many other Windows headers.
 #include <windows.h>
-
 // For getPlatformVersion; remove unless needed for your plugin implementation.
 #include <VersionHelpers.h>
 
@@ -12,6 +11,7 @@
 
 #include <memory>
 #include <sstream>
+#include <iostream>
 
 namespace keyboard_invoker
 {
@@ -174,8 +174,8 @@ namespace keyboard_invoker
           metaInput.ki.dwFlags = KEYEVENTF_KEYUP;
           SendInput(1, &metaInput, sizeof(INPUT));
       }
-        // return success
-        result->Success(flutter::EncodableValue(true));
+      // return success
+      result->Success(flutter::EncodableValue(true));
       }
 
     }

@@ -43,39 +43,41 @@ class _MyAppState extends State<MyApp> {
     super.dispose();
   }
 
-  // This is the macro recording ("bratwurst und ein grosses bier")
-  List testMacroRecording = [
-    LogicalKeyboardKey.keyB.keyId,
-    LogicalKeyboardKey.keyR.keyId,
-    LogicalKeyboardKey.keyA.keyId,
-    LogicalKeyboardKey.keyT.keyId,
-    LogicalKeyboardKey.keyW.keyId,
-    LogicalKeyboardKey.keyU.keyId,
-    LogicalKeyboardKey.keyR.keyId,
-    LogicalKeyboardKey.keyS.keyId,
-    LogicalKeyboardKey.keyT.keyId,
-    LogicalKeyboardKey.space.keyId,
-    LogicalKeyboardKey.keyU.keyId,
-    LogicalKeyboardKey.keyN.keyId,
-    LogicalKeyboardKey.keyD.keyId,
-    LogicalKeyboardKey.space.keyId,
-    LogicalKeyboardKey.keyE.keyId,
-    LogicalKeyboardKey.keyI.keyId,
-    LogicalKeyboardKey.keyN.keyId,
-    LogicalKeyboardKey.space.keyId,
-    LogicalKeyboardKey.keyG.keyId,
-    LogicalKeyboardKey.keyR.keyId,
-    LogicalKeyboardKey.keyO.keyId,
-    LogicalKeyboardKey.keyS.keyId,
-    LogicalKeyboardKey.keyS.keyId,
-    LogicalKeyboardKey.keyE.keyId,
-    LogicalKeyboardKey.keyS.keyId,
-    LogicalKeyboardKey.space.keyId,
-    LogicalKeyboardKey.keyB.keyId,
-    LogicalKeyboardKey.keyI.keyId,
-    LogicalKeyboardKey.keyE.keyId,
-    LogicalKeyboardKey.keyR.keyId,
+  // This is the macro List
+  List<LogicalKeyboardKey> keyboardKeyList = [
+    LogicalKeyboardKey.shiftLeft,
+    LogicalKeyboardKey.keyB,
+    LogicalKeyboardKey.keyR,
+    LogicalKeyboardKey.keyA,
+    LogicalKeyboardKey.keyT,
+    LogicalKeyboardKey.keyW,
+    LogicalKeyboardKey.keyU,
+    LogicalKeyboardKey.keyR,
+    LogicalKeyboardKey.keyS,
+    LogicalKeyboardKey.keyT,
+    LogicalKeyboardKey.space,
+    LogicalKeyboardKey.keyU,
+    LogicalKeyboardKey.keyN,
+    LogicalKeyboardKey.keyD,
+    LogicalKeyboardKey.space,
+    LogicalKeyboardKey.keyE,
+    LogicalKeyboardKey.keyI,
+    LogicalKeyboardKey.keyN,
+    LogicalKeyboardKey.space,
+    LogicalKeyboardKey.keyG,
+    LogicalKeyboardKey.keyR,
+    LogicalKeyboardKey.keyO,
+    LogicalKeyboardKey.keyS,
+    LogicalKeyboardKey.keyS,
+    LogicalKeyboardKey.keyE,
+    LogicalKeyboardKey.keyS,
+    LogicalKeyboardKey.space,
+    LogicalKeyboardKey.keyB,
+    LogicalKeyboardKey.keyI,
+    LogicalKeyboardKey.keyE,
+    LogicalKeyboardKey.keyR,
   ];
+
   // Platform messages are asynchronous, so we initialize in an async method.
   Future<void> initPlatformState() async {
     String platformVersion;
@@ -92,7 +94,6 @@ class _MyAppState extends State<MyApp> {
     // message was in flight, we want to discard the reply rather than calling
     // setState to update our non-existent appearance.
     if (!mounted) return;
-
     setState(() {
       _platformVersion = platformVersion;
     });
@@ -107,6 +108,7 @@ class _MyAppState extends State<MyApp> {
         macroRecordingScrollController.position.maxScrollExtent + 27,
       );
     }
+
     return MaterialApp(
       title: 'Keyboard_invoker example',
       home: Scaffold(
@@ -150,15 +152,13 @@ class _MyAppState extends State<MyApp> {
                           onPressed: () async {
                             // focusing the text field
                             _focusNode.requestFocus();
-                            // invoking the macro
-                            for (var macro in testMacroRecording) {
-                              final result =
-                                  await keyboardInvokerPlugin.invokeKey(macro);
-                              if (!result) {
-                                print("Error invoking macro");
-                                break;
-                              }
-                            }
+                            // convert the macro list to a list of maps
+                            List<Map<String, dynamic>> macroList =
+                                await keyboardInvokerPlugin
+                                    .logicalKeyboardKeysToMacro(
+                                        keyboardKeyList);
+                            // invoke the macro
+                            keyboardInvokerPlugin.invokeMacroList(macroList);
                           },
                           child: const Text("Test Macro (bratwurst)")),
                       // modifier test button (shift hold and release)
@@ -203,18 +203,7 @@ class _MyAppState extends State<MyApp> {
                             _focusNode.requestFocus();
                             // stop recording
                             keyboardInvokerPlugin.stopRecording();
-
-                            for (var key
-                                in keyboardInvokerPlugin.recordedKeys) {
-                              if (key["event"] == KeyType.keyInvoke) {
-                                final result =
-                                    await keyboardInvokerPlugin.invokeKey(key);
-                                if (!result) {
-                                  print("Error invoking macro");
-                                  break;
-                                }
-                              }
-                            }
+                            keyboardInvokerPlugin.invokeRecordedKeyList();
                           },
                           child: const Text("Invoke Recorded Macro")),
                     ],

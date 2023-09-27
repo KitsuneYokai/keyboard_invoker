@@ -95,7 +95,7 @@ class KeyboardInvoker extends ChangeNotifier {
           _recordedKeys = [..._recordedKeys, macroMap];
           notifyListeners();
         }
-        // record the keys on a key up event, so they are not held down
+        // record the keys on a key up event
       } else if (event is RawKeyUpEvent) {
         macroMap["event"] = KeyType.keyInvoke;
 
@@ -120,5 +120,93 @@ class KeyboardInvoker extends ChangeNotifier {
     notifyListeners();
     // remove the listener
     RawKeyboard.instance.removeListener(recordKeys);
+  }
+
+  Future<void> invokeMacroList(List<Map<String, dynamic>> macroList) async {
+    // loop through the key list
+    for (var key in macroList) {
+      if (key["event"] == KeyType.keyInvoke) {
+        final result = await invokeKey(key);
+
+        if (!result) {
+          // TODO: add exception
+          print("Error invoking macro");
+        }
+      }
+    }
+  }
+
+  Future<void> invokeRecordedKeyList() async {
+    invokeMacroList(_recordedKeys);
+  }
+
+  Future<List<Map<String, dynamic>>> logicalKeyboardKeysToMacro(
+      List<LogicalKeyboardKey> keys) async {
+    List<Map<String, dynamic>> macroList = [];
+    // loop through the key list
+    bool isLeftShiftPressed = false;
+    bool isLeftAltPressed = false;
+    bool isLeftControlPressed = false;
+    bool isLeftMetaPressed = false;
+    bool isRightShiftPressed = false;
+    bool isRightAltPressed = false;
+    bool isRightControlPressed = false;
+    bool isRightMetaPressed = false;
+
+    for (var key in keys) {
+      // if the key is a modifier set the bool to true
+      if (key == LogicalKeyboardKey.shiftLeft ||
+          key == LogicalKeyboardKey.shift) {
+        isLeftShiftPressed = true;
+      } else if (key == LogicalKeyboardKey.shiftRight) {
+        isRightShiftPressed = true;
+      } else if (key == LogicalKeyboardKey.altLeft ||
+          key == LogicalKeyboardKey.alt) {
+        isLeftAltPressed = true;
+      } else if (key == LogicalKeyboardKey.altRight) {
+        isRightAltPressed = true;
+      } else if (key == LogicalKeyboardKey.controlLeft ||
+          key == LogicalKeyboardKey.control) {
+        isLeftControlPressed = true;
+      } else if (key == LogicalKeyboardKey.controlRight) {
+        isRightControlPressed = true;
+      } else if (key == LogicalKeyboardKey.metaLeft ||
+          key == LogicalKeyboardKey.meta) {
+        isLeftMetaPressed = true;
+      } else if (key == LogicalKeyboardKey.metaRight) {
+        isRightMetaPressed = true;
+      } else {
+        // create a map for the key
+        Map<String, dynamic> macroMap = {
+          "keyLabel": key.keyLabel,
+          "keyCode": key.keyId,
+          "modifiers": {
+            "shiftLeft": isLeftShiftPressed,
+            "shiftRight": isRightShiftPressed,
+            "altLeft": isLeftAltPressed,
+            "altRight": isRightAltPressed,
+            "controlLeft": isLeftControlPressed,
+            "controlRight": isRightControlPressed,
+            "metaLeft": isLeftMetaPressed,
+            "metaRight": isRightMetaPressed,
+          },
+          "event": KeyType.keyInvoke,
+        };
+        // set the modifier back to false
+        isLeftShiftPressed = false;
+        isLeftAltPressed = false;
+        isLeftControlPressed = false;
+        isLeftMetaPressed = false;
+        isRightShiftPressed = false;
+        isRightAltPressed = false;
+        isRightControlPressed = false;
+        isRightMetaPressed = false;
+
+        // add the key to the macro list
+        macroList = [...macroList, macroMap];
+      }
+    }
+    // return the macro list
+    return macroList;
   }
 }

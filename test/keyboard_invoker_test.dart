@@ -11,7 +11,7 @@ class MockKeyboardInvokerPlatform
   Future<String?> getPlatformVersion() => Future.value('42');
 
   @override
-  Future invokeKey(int keyCode) {
+  Future invokeKey(List<Map<String, dynamic>> keyCode) {
     // TODO: implement invokeKey
     throw UnimplementedError();
   }
