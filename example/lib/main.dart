@@ -158,7 +158,8 @@ class _MyAppState extends State<MyApp> {
                                     .logicalKeyboardKeysToMacro(
                                         keyboardKeyList);
                             // invoke the macro
-                            keyboardInvokerPlugin.invokeMacroList(macroList);
+                            await keyboardInvokerPlugin
+                                .invokeMacroList(macroList);
                           },
                           child: const Text("Test Macro (bratwurst)")),
                       // modifier test button (shift hold and release)
@@ -180,8 +181,6 @@ class _MyAppState extends State<MyApp> {
                           onPressed: keyboardInvokerPlugin.isRecording
                               ? () async {
                                   // stop recording
-                                  print(keyboardInvokerPlugin.recordedKeys
-                                      .toString());
                                   await keyboardInvokerPlugin.stopRecording();
                                 }
                               : () async {
