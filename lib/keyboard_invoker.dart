@@ -26,10 +26,6 @@ class KeyboardInvoker extends ChangeNotifier {
   }
 
   // Platform Functions
-  Future<String?> getPlatformVersion() {
-    return KeyboardInvokerPlatform.instance.getPlatformVersion();
-  }
-
   Future<bool> invokeKey(Map<String, dynamic> keyCode) async {
     return KeyboardInvokerPlatform.instance.invokeKey(keyCode);
   }
@@ -129,8 +125,12 @@ class KeyboardInvoker extends ChangeNotifier {
         final result = await invokeKey(key);
 
         if (!result) {
-          // TODO: add exception
-          print("Error invoking macro");
+          // Raise an error.
+          throw PlatformException(
+            code: 'Unknown Error',
+            message:
+                'There was an unknown error while invoking the key. Maybe the key is not supported on this platform? If you think this is a bug, please open an issue on GitHub.',
+          );
         }
       }
     }

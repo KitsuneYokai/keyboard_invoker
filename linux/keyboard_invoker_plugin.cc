@@ -26,11 +26,7 @@ static void keyboard_invoker_plugin_handle_method_call(
 
   const gchar *method = fl_method_call_get_name(method_call);
 
-  if (strcmp(method, "getPlatformVersion") == 0)
-  {
-    response = get_platform_version();
-  }
-  else if (strcmp(method, "invokeKey") == 0)
+  if (strcmp(method, "invokeKey") == 0)
   {
     // TODO: check if the active display server is X11 or wayland + check if xdotool is installed
     // get the arguments
@@ -85,15 +81,6 @@ static void release_modifiers()
 {
     std::string command = "xdotool keyup Shift_L Shift_R Alt_L Alt_R Control_L Control_R Meta_L Meta_R";
     system(command.c_str());
-}
-
-FlMethodResponse *get_platform_version()
-{
-  struct utsname uname_data = {};
-  uname(&uname_data);
-  g_autofree gchar *version = g_strdup_printf("Linux %s", uname_data.version);
-  g_autoptr(FlValue) result = fl_value_new_string(version);
-  return FL_METHOD_RESPONSE(fl_method_success_response_new(result));
 }
 
 FlMethodResponse *invoke_key(const char* keyCode,

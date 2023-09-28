@@ -1,7 +1,7 @@
 name: keyboard_invoker
 description: A plugin that invokes keys on the host system.
-version: 0.0.1
-homepage:
+version: 1.0.0
+repository: https://github.com/KitsuneYokai/keyboard_invoker
 
 environment:
   sdk: ">=3.0.3 <4.0.0"

@@ -15,20 +15,13 @@ class MethodChannelKeyboardInvoker extends KeyboardInvokerPlatform {
   @visibleForTesting
   final methodChannel = const MethodChannel('keyboard_invoker');
 
-  @override
-  Future<String?> getPlatformVersion() async {
-    final version =
-        await methodChannel.invokeMethod<String>('getPlatformVersion');
-    return version;
-  }
-
   // invoke a single key from the keyCode Map
   @override
   Future<bool> invokeKey(Map<String, dynamic> keyCode) async {
     final List<Map<String, dynamic>> platformKeyMappings =
         key_mappings.keyMapping;
 
-    var platformKeyCode;
+    dynamic platformKeyCode;
 
     bool leftShiftPressed = false;
     bool rightShiftPressed = false;

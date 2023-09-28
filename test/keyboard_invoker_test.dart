@@ -8,10 +8,7 @@ class MockKeyboardInvokerPlatform
     with MockPlatformInterfaceMixin
     implements KeyboardInvokerPlatform {
   @override
-  Future<String?> getPlatformVersion() => Future.value('42');
-
-  @override
-  Future invokeKey(List<Map<String, dynamic>> keyCode) {
+  Future<bool> invokeKey(keyCode) {
     // TODO: implement invokeKey
     throw UnimplementedError();
   }
@@ -25,11 +22,12 @@ void main() {
     expect(initialPlatform, isInstanceOf<MethodChannelKeyboardInvoker>());
   });
 
-  test('getPlatformVersion', () async {
-    KeyboardInvoker keyboardInvokerPlugin = KeyboardInvoker();
-    MockKeyboardInvokerPlatform fakePlatform = MockKeyboardInvokerPlatform();
-    KeyboardInvokerPlatform.instance = fakePlatform;
-
-    expect(await keyboardInvokerPlugin.getPlatformVersion(), '42');
-  });
+  // TODO: Write Tests
+  // test('getPlatformVersion', () async {
+  //   KeyboardInvoker keyboardInvokerPlugin = KeyboardInvoker();
+  //   MockKeyboardInvokerPlatform fakePlatform = MockKeyboardInvokerPlatform();
+  //   KeyboardInvokerPlatform.instance = fakePlatform;
+  //
+  //   expect(await keyboardInvokerPlugin.getPlatformVersion(), '42');
+  // });
 }

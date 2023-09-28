@@ -43,10 +43,6 @@ public class KeyboardInvokerPlugin: NSObject, FlutterPlugin {
   public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
 
   switch call.method {
-    // default case to get the platform version, will be deleted later
-    case "getPlatformVersion":
-      result("macOS " + ProcessInfo.processInfo.operatingSystemVersionString)
-
     // case to invoke a key press 
     case "invokeKey":
       // Check accessibility permissions
