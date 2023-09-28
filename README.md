@@ -26,6 +26,36 @@ To add **keyboard_invoker** to your Flutter project, open your project folder in
 flutter pub add keyboard_invoker
 ```
 
+## Setting Up on Linux
+
+To get started on Linux, you'll need to install `xdotool` and configure your display server to use `X11`.
+
+### Installing xdotool
+
+To install `xdotool`, open your terminal and run the following command:
+
+```sh
+sudo apt-get install xdotool
+```
+
+### Configuring Your Display Server (For Ubuntu 22.04)
+
+For Ubuntu 22.04, you'll also need to adjust your display server settings. To do this:
+
+```sh
+sudo nano /etc/gdm3/custom.conf
+```
+
+Find the line that reads `WaylandEnable=false`, uncomment it if necessary, save the changes, and then reboot your system for the settings to take effect.
+
+I will probably invoke a platform message to automate this process in the future.
+
+## Setting Up on MacOS
+
+On MacOS, the setup is simpler, as you won't need to install any additional software. However, you will need to grant permission for monitoring your keyboard input when prompted while trying to invoke a macro.
+
+Keep in mind that this plugin wont work with Flutter apps in debug mode on MacOS. You'll need to build a release version for it to function properly, only for MacOS tough.
+
 ## Usage/Examples
 
 We gonna use the Provider package to initialize the keyboardInvokerPlugin.
