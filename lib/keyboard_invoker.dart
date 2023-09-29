@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
@@ -5,14 +7,36 @@ import 'keyboard_invoker_platform_interface.dart';
 
 enum KeyType { keyInvoke, keyDown, keyUp }
 
+class X11NotActiveInstalled implements Exception {
+  final String code;
+  final String message;
+
+  X11NotActiveInstalled({required this.code, required this.message});
+}
+
+class XdotoolNotInstalled implements Exception {
+  final String code;
+  final String message;
+
+  XdotoolNotInstalled({required this.code, required this.message});
+}
+
 class KeyboardInvoker extends ChangeNotifier {
   // vars for the macro recording
   List<Map<String, dynamic>> _recordedKeys = [];
   bool _isRecording = false;
 
-  // getters
+  // vars for linux support
+  bool _isX11 = false;
+  bool _isXdotoolInstalled = false;
+
+  // macro recording getters
   List<Map<String, dynamic>> get recordedKeys => _recordedKeys;
   bool get isRecording => _isRecording;
+
+  // linux support getters
+  bool get isX11 => _isX11;
+  bool get isXdotoolInstalled => _isXdotoolInstalled;
 
   // setter
   set recordedKeys(List<Map<String, dynamic>> recordedKeys) {
@@ -23,6 +47,24 @@ class KeyboardInvoker extends ChangeNotifier {
   set isRecording(bool isRecording) {
     _isRecording = isRecording;
     notifyListeners();
+  }
+
+  // init class functions
+  KeyboardInvoker() {
+    _initLinux();
+  }
+
+  Future<void> _initLinux() async {
+    if (Platform.isLinux && !_isX11 && !_isXdotoolInstalled) {
+      _isX11 = await _isCommandInstalled('xset');
+      _isXdotoolInstalled = await _isCommandInstalled('xdotool');
+      notifyListeners();
+    }
+  }
+
+  Future<bool> _isCommandInstalled(String command) async {
+    final result = await Process.run('which', [command]);
+    return result.exitCode == 0;
   }
 
   // Platform Functions
@@ -119,6 +161,26 @@ class KeyboardInvoker extends ChangeNotifier {
   }
 
   Future<void> invokeMacroList(List<Map<String, dynamic>> macroList) async {
+    if (Platform.isLinux) {
+      // check if x11 is installed
+      if (!_isX11) {
+        throw X11NotActiveInstalled(
+          code: 'X11_NOT_INSTALLED',
+          message:
+              'X11 is not installed or not active. Please install and activate X11 to use this plugin on Linux. If you think this is a bug, please open an issue on GitHub.',
+        );
+      }
+
+      // check if xdotool is installed
+      if (!_isXdotoolInstalled) {
+        throw XdotoolNotInstalled(
+          code: 'XDOTOOL_NOT_INSTALLED',
+          message:
+              'xdotool is not installed. Please install xdotool to use this plugin on Linux. If you think this is a bug, please open an issue on GitHub.',
+        );
+      }
+    }
+
     // loop through the key list
     for (var key in macroList) {
       if (key["event"] == KeyType.keyInvoke) {
@@ -134,10 +196,6 @@ class KeyboardInvoker extends ChangeNotifier {
         }
       }
     }
-  }
-
-  Future<void> invokeRecordedKeyList() async {
-    invokeMacroList(_recordedKeys);
   }
 
   Future<List<Map<String, dynamic>>> logicalKeyboardKeysToMacro(
