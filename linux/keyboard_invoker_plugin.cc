@@ -11,6 +11,17 @@
   (G_TYPE_CHECK_INSTANCE_CAST((obj), keyboard_invoker_plugin_get_type(), \
                               KeyboardInvokerPlugin))
 
+static void hold_keys(const char *modifiers) {
+    std::string command = "xdotool keydown " + std::string(modifiers);
+    system(command.c_str());
+}
+
+static void release_modifiers()
+{
+    std::string command = "xdotool keyup Shift_L Shift_R Alt_L Alt_R Control_L Control_R Meta_L Meta_R";
+    system(command.c_str());
+}
+
 struct _KeyboardInvokerPlugin
 {
   GObject parent_instance;
@@ -48,20 +59,36 @@ static void keyboard_invoker_plugin_handle_method_call(
     FlValue *keyCodeValue = fl_value_lookup_string(args, "platformKeyCode");
 
     // convert the modifiers to bool 
-    bool leftShift = fl_value_get_bool(leftShiftPressed);
-    bool rightShift = fl_value_get_bool(rightShiftPressed);
+    const bool leftShift = fl_value_get_bool(leftShiftPressed);
+    const bool rightShift = fl_value_get_bool(rightShiftPressed);
 
-    bool leftAlt = fl_value_get_bool(leftAltPressed);
-    bool rightAlt = fl_value_get_bool(rightAltPressed);
+    const bool leftAlt = fl_value_get_bool(leftAltPressed);
+    const bool rightAlt = fl_value_get_bool(rightAltPressed);
 
-    bool leftControl = fl_value_get_bool(leftControlPressed);
-    bool rightControl = fl_value_get_bool(rightControlPressed);
+    const bool leftControl = fl_value_get_bool(leftControlPressed);
+    const bool rightControl = fl_value_get_bool(rightControlPressed);
 
-    bool leftMeta = fl_value_get_bool(leftMetaPressed);
-    bool rightMeta = fl_value_get_bool(rightMetaPressed);
+    const bool leftMeta = fl_value_get_bool(leftMetaPressed);
+    const bool rightMeta = fl_value_get_bool(rightMetaPressed);
 
-    // convert the keyCode to int
-    response = invoke_key(fl_value_get_string(keyCodeValue), leftShift, rightShift, leftAlt, rightAlt, leftControl, rightControl, leftMeta, rightMeta);
+    // create a string with the modifiers
+    std::string modifiers = "";
+    if (leftShift) modifiers += "Shift_L ";
+    if (rightShift) modifiers += "Shift_R ";
+    if (leftAlt) modifiers += "Alt_L ";
+    if (rightAlt) modifiers += "Alt_R ";
+    if (leftControl) modifiers += "Control_L ";
+    if (rightControl) modifiers += "Control_R ";
+    if (leftMeta) modifiers += "Meta_L ";
+    if (rightMeta) modifiers += "Meta_R ";
+    // when a modifier is pressed, hold it down until the key is pressed
+    if (modifiers != "") hold_keys(modifiers.c_str());
+
+    // invoke the key
+    response = invoke_key(fl_value_get_string(keyCodeValue));
+    
+    // release the modifiers
+    if (modifiers!= "") release_modifiers();
   }
   else
   {
@@ -70,63 +97,8 @@ static void keyboard_invoker_plugin_handle_method_call(
   fl_method_call_respond(method_call, response, nullptr);
 }
 
-static void hold_key(const char* keyCode)
+FlMethodResponse *invoke_key(const char* keyCode)
 {
-    std::string command = "xdotool keydown ";
-    command += keyCode;
-    system(command.c_str());
-}
-
-static void release_modifiers()
-{
-    std::string command = "xdotool keyup Shift_L Shift_R Alt_L Alt_R Control_L Control_R Meta_L Meta_R";
-    system(command.c_str());
-}
-
-FlMethodResponse *invoke_key(const char* keyCode,
-                             const bool leftShift,
-                             const bool rightShift,
-                             const bool leftAlt,
-                             const bool rightAlt,
-                             const bool leftControl,
-                             const bool rightControl,
-                             const bool leftMeta,
-                             const bool rightMeta)
-{
-    // hold down the modifiers
-    if (leftShift)
-    {
-        hold_key("Shift_L");
-    }
-    if (rightShift)
-    {
-        hold_key("Shift_R");
-    }
-    if (leftAlt)
-    {
-        hold_key("Alt_L");
-    }
-    if (rightAlt)
-    {
-        hold_key("Alt_R");
-    }
-    if (leftControl)
-    {
-        hold_key("Control_L");
-    }
-    if (rightControl)
-    {
-        hold_key("Control_R");
-    }
-    if (leftMeta)
-    {
-        hold_key("Meta_L");
-    }
-    if (rightMeta)
-    {
-        hold_key("Meta_R");
-    }
-    
     // Execute the key event
     std::string command = "xdotool key ";
     command += keyCode;
@@ -137,14 +109,12 @@ FlMethodResponse *invoke_key(const char* keyCode,
         // return true if the command was executed successfully
         g_autoptr(FlValue) result = fl_value_new_bool(true);
         FlMethodResponse *response = FL_METHOD_RESPONSE(fl_method_success_response_new(result));
-        release_modifiers();
         return response;
     }
     else
     {
         g_autoptr(FlValue) result = fl_value_new_bool(false);
         FlMethodResponse *response = FL_METHOD_RESPONSE(fl_method_success_response_new(result));
-        release_modifiers();
         return response;
     }
 }

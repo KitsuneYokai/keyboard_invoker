@@ -8,4 +8,4 @@
 // in the unit-testable API.
 
 // Handle the platform method call.
-FlMethodResponse *invoke_key(const char* keyCode, bool leftShift, bool rightShift, bool leftAlt, bool rightAlt, bool leftControl, bool rightControl, bool leftMeta, bool rightMeta);
+FlMethodResponse *invoke_key(const char* keyCode);
