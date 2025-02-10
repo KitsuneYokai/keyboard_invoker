@@ -1,6 +1,7 @@
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
 import 'keyboard_invoker_method_channel.dart';
+import 'mappings/key_recording.dart';
 
 abstract class KeyboardInvokerPlatform extends PlatformInterface {
   /// Constructs a KeyboardInvokerPlatform.
@@ -23,8 +24,23 @@ abstract class KeyboardInvokerPlatform extends PlatformInterface {
     _instance = instance;
   }
 
-  Future<bool> invokeKey(Map<String, dynamic> keyCode) {
+  Future<void> validateMacOsPermissions() async {
+    return Future.error(
+        '_validateMacOsPermissions() dosnt need to be implemented for this platform');
+  }
+
+  Future<void> invokeKey(KeyRecording keyCode) async {
     return Future.error(
         'invokeKey() has not been implemented on this platform yet.');
+  }
+
+  Future<void> holdKey(KeyRecording keyCode) async {
+    return Future.error(
+        'holdKey() has not been implemented on this platform yet.');
+  }
+
+  Future<void> releaseKey(KeyRecording keyCode) async {
+    return Future.error(
+        'releaseKey() has not been implemented on this platform yet.');
   }
 }

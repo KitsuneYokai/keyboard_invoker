@@ -4,267 +4,220 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 import 'keyboard_invoker_platform_interface.dart';
+import 'mappings/base_key.dart';
+import 'mappings/key_recording.dart';
 
-enum KeyType { keyInvoke, keyDown, keyUp }
+import 'mappings/key_mapping.dart';
 
-class X11NotActiveInstalled implements Exception {
+class LinuxError implements Exception {
   final String code;
   final String message;
 
-  X11NotActiveInstalled({required this.code, required this.message});
-}
-
-class XdotoolNotInstalled implements Exception {
-  final String code;
-  final String message;
-
-  XdotoolNotInstalled({required this.code, required this.message});
+  LinuxError({required this.code, required this.message});
 }
 
 class KeyboardInvoker extends ChangeNotifier {
   // vars for the macro recording
-  List<Map<String, dynamic>> _recordedKeys = [];
+  List<KeyRecording> _recordedKeys = [];
   bool _isRecording = false;
 
   // vars for linux support
   bool _isX11 = false;
   bool _isXdotoolInstalled = false;
 
+  // recording delay vars
+  DateTime? _lastKeyEventTime;
+  bool _includeDelays = true;
+  Duration _staticDelay = const Duration(milliseconds: 10);
+
   // macro recording getters
-  List<Map<String, dynamic>> get recordedKeys => _recordedKeys;
+  List<KeyRecording> get recordedKeys => _recordedKeys;
   bool get isRecording => _isRecording;
 
   // linux support getters
   bool get isX11 => _isX11;
   bool get isXdotoolInstalled => _isXdotoolInstalled;
 
-  // setter
-  set recordedKeys(List<Map<String, dynamic>> recordedKeys) {
+  // getter and setter for the recording delay
+  bool get includeDelays => _includeDelays;
+  Duration get staticDelay => _staticDelay;
+
+  set includeDelays(bool value) {
+    _includeDelays = value;
+    notifyListeners();
+  }
+
+  set staticDelay(Duration value) {
+    _staticDelay = value;
+    notifyListeners();
+  }
+
+  // setter for the recorded keys
+  set recordedKeys(List<KeyRecording> recordedKeys) {
     _recordedKeys = recordedKeys;
     notifyListeners();
   }
 
-  set isRecording(bool isRecording) {
-    _isRecording = isRecording;
-    notifyListeners();
-  }
-
-  // init class functions
+  // class constructor
   KeyboardInvoker() {
     _initLinux();
+    _initMacOs();
   }
 
   Future<void> _initLinux() async {
     if (Platform.isLinux && !_isX11 && !_isXdotoolInstalled) {
-      _isX11 = await _isCommandInstalled('xset');
-      _isXdotoolInstalled = await _isCommandInstalled('xdotool');
+      _isX11 = await _isLinuxCommandInstalled('xset');
+      _isXdotoolInstalled = await _isLinuxCommandInstalled('xdotool');
+
+      _validateLinuxDependencies();
       notifyListeners();
     }
   }
 
-  Future<bool> _isCommandInstalled(String command) async {
+  void _validateLinuxDependencies() {
+    // check if x11 is installed
+    if (!_isX11) {
+      throw LinuxError(
+        code: 'X11_NOT_INSTALLED',
+        message:
+            'X11 is not installed or not active. Please install and activate X11 to use this plugin on Linux. If you think this is a bug, please open an issue on GitHub.',
+      );
+    }
+
+    // check if xdotool is installed
+    if (!_isXdotoolInstalled) {
+      throw LinuxError(
+        code: 'XDOTOOL_NOT_INSTALLED',
+        message:
+            'xdotool is not installed. Please install xdotool to use this plugin on Linux. If you think this is a bug, please open an issue on GitHub.',
+      );
+    }
+  }
+
+  Future<bool> _isLinuxCommandInstalled(String command) async {
     final result = await Process.run('which', [command]);
     return result.exitCode == 0;
   }
 
-  // Platform Functions
-  Future<bool> invokeKey(Map<String, dynamic> keyCode) async {
-    return KeyboardInvokerPlatform.instance.invokeKey(keyCode);
-  }
-
-  // Macro Recording Functions
-  Future<void> startRecording() async {
-    // set the state to recording
-    _isRecording = true;
-    notifyListeners();
-    // add the listener
-    RawKeyboard.instance.addListener(recordKeys);
-  }
-
-  // simple macro recording
-  Future<void> recordKeys(RawKeyEvent event) async {
-    String keyLabel = event.logicalKey.keyLabel;
-    int keyCode = event.logicalKey.keyId;
-    bool isRepeat = event.repeat;
-
-    bool isLeftShiftPressed = event.isKeyPressed(LogicalKeyboardKey.shiftLeft);
-    bool isRightShiftPressed =
-        event.isKeyPressed(LogicalKeyboardKey.shiftRight);
-
-    bool isLeftAltPressed = event.isKeyPressed(LogicalKeyboardKey.altLeft);
-    bool isRightAltPressed = event.isKeyPressed(LogicalKeyboardKey.altRight);
-
-    bool isLeftControlPressed =
-        event.isKeyPressed(LogicalKeyboardKey.controlLeft);
-    bool isRightControlPressed =
-        event.isKeyPressed(LogicalKeyboardKey.controlRight);
-
-    bool isLeftMetaPressed = event.isKeyPressed(LogicalKeyboardKey.metaLeft);
-    bool isRightMetaPressed = event.isKeyPressed(LogicalKeyboardKey.metaRight);
-
-    // create the macro map
-    Map<String, dynamic> macroMap = {
-      "keyLabel": keyLabel,
-      "keyCode": keyCode,
-      "modifiers": {
-        "shiftLeft": isLeftShiftPressed,
-        "shiftRight": isRightShiftPressed,
-        "altLeft": isLeftAltPressed,
-        "altRight": isRightAltPressed,
-        "controlLeft": isLeftControlPressed,
-        "controlRight": isRightControlPressed,
-        "metaLeft": isLeftMetaPressed,
-        "metaRight": isRightMetaPressed,
-      },
-      "event": null,
-    };
-
-    // don't record the key if it's a repeated event
-    if (!isRepeat) {
-      // only record the modifier keys on a key down event to display them as held down
-      if (event is RawKeyDownEvent) {
-        if (keyLabel.toLowerCase().contains("shift") ||
-            keyLabel.toLowerCase().contains("control") ||
-            keyLabel.toLowerCase().contains("alt") ||
-            keyLabel.toLowerCase().contains("meta")) {
-          macroMap["event"] = KeyType.keyDown;
-          macroMap["keyLabel"] = "$keyLabel ⬇️";
-
-          _recordedKeys = [..._recordedKeys, macroMap];
-          notifyListeners();
-        }
-        // record the keys on a key up event
-      } else if (event is RawKeyUpEvent) {
-        macroMap["event"] = KeyType.keyInvoke;
-
-        // if the key is a modifier, set the event to key up
-        if (keyLabel.toLowerCase().contains("shift") ||
-            keyLabel.toLowerCase().contains("control") ||
-            keyLabel.toLowerCase().contains("alt") ||
-            keyLabel.toLowerCase().contains("meta")) {
-          macroMap["event"] = KeyType.keyUp;
-          macroMap["keyLabel"] = "$keyLabel ⬆️";
-        }
-        // set the state
-        _recordedKeys = [..._recordedKeys, macroMap];
-        notifyListeners();
-      }
+  Future<void> _initMacOs() async {
+    if (Platform.isMacOS) {
+      await KeyboardInvokerPlatform.instance.validateMacOsPermissions();
     }
   }
 
-  Future<void> stopRecording() async {
+  // Macro Recording Functions
+  void startRecording() {
+    // set the state to recording
+    _isRecording = true;
+    _lastKeyEventTime = DateTime.now(); // Initialize the time
+    notifyListeners();
+    // add the listener
+    HardwareKeyboard.instance.addHandler(recordKeys);
+  }
+
+  // simple macro recording
+  bool recordKeys(KeyEvent event) {
+    BaseKey baseKey = KeyMappings.getBaseKey(event.logicalKey);
+
+    KeyEventType keyEventType = event is KeyDownEvent
+        ? KeyEventType.keyDown
+        : event is KeyUpEvent
+            ? KeyEventType.keyUp
+            : KeyEventType.keyInvoke;
+
+    // Calculate delay if enabled
+    Duration delay;
+    if (_includeDelays && _lastKeyEventTime != null) {
+      delay = DateTime.now().difference(_lastKeyEventTime!);
+    } else {
+      delay = _staticDelay;
+    }
+
+    _lastKeyEventTime = DateTime.now();
+
+    KeyRecording keyRecording = KeyRecording(
+        baseKey.logicalKeyId,
+        baseKey.description,
+        baseKey.linux,
+        baseKey.windows,
+        baseKey.mac,
+        keyEventType,
+        delay);
+
+    _recordedKeys.add(keyRecording);
+    notifyListeners();
+
+    return true;
+  }
+
+  void stopRecording() {
     // set the state
     _isRecording = false;
     notifyListeners();
     // remove the listener
-    RawKeyboard.instance.removeListener(recordKeys);
+    HardwareKeyboard.instance.removeHandler(recordKeys);
   }
 
-  Future<void> invokeMacroList(List<Map<String, dynamic>> macroList) async {
-    if (Platform.isLinux) {
-      // check if x11 is installed
-      if (!_isX11) {
-        throw X11NotActiveInstalled(
-          code: 'X11_NOT_INSTALLED',
-          message:
-              'X11 is not installed or not active. Please install and activate X11 to use this plugin on Linux. If you think this is a bug, please open an issue on GitHub.',
-        );
-      }
+  void clearRecording() {
+    // clear the recorded keys
+    _recordedKeys = [];
+    _lastKeyEventTime = null; // Reset the timer
+    notifyListeners();
+  }
 
-      // check if xdotool is installed
-      if (!_isXdotoolInstalled) {
-        throw XdotoolNotInstalled(
-          code: 'XDOTOOL_NOT_INSTALLED',
-          message:
-              'xdotool is not installed. Please install xdotool to use this plugin on Linux. If you think this is a bug, please open an issue on GitHub.',
-        );
-      }
-    }
+  // Macro Execution Functions
+  Future<void> executeRecording() async {
+    for (KeyRecording keyRecording in _recordedKeys) {
+      // Wait for the recorded delay before executing the key
+      await Future.delayed(keyRecording.delay);
 
-    // loop through the key list
-    for (var key in macroList) {
-      if (key["event"] == KeyType.keyInvoke) {
-        final result = await invokeKey(key);
+      switch (keyRecording.keyEventType) {
+        case KeyEventType.keyDown:
+          await holdKey(keyRecording);
+          break;
 
-        if (!result) {
-          // Raise an error.
-          throw PlatformException(
-            code: 'Unknown Error',
-            message:
-                'There was an unknown error while invoking the key. Maybe the key is not supported on this platform? If you think this is a bug, please open an issue on GitHub.',
-          );
-        }
+        case KeyEventType.keyUp:
+          await releaseKey(keyRecording);
+          break;
+
+        case KeyEventType.keyInvoke:
+          await invokeKey(keyRecording);
+          break;
       }
     }
   }
 
-  Future<List<Map<String, dynamic>>> logicalKeyboardKeysToMacro(
-      List<LogicalKeyboardKey> keys) async {
-    List<Map<String, dynamic>> macroList = [];
-    // loop through the key list
-    bool isLeftShiftPressed = false;
-    bool isLeftAltPressed = false;
-    bool isLeftControlPressed = false;
-    bool isLeftMetaPressed = false;
-    bool isRightShiftPressed = false;
-    bool isRightAltPressed = false;
-    bool isRightControlPressed = false;
-    bool isRightMetaPressed = false;
+  Future<void> invokeKeyRecordingList(List<KeyRecording> recordings) async {
+    for (KeyRecording keyRecording in recordings) {
+      // Wait for the recorded delay before executing the key
+      await Future.delayed(keyRecording.delay);
 
-    for (var key in keys) {
-      // if the key is a modifier set the bool to true
-      if (key == LogicalKeyboardKey.shiftLeft ||
-          key == LogicalKeyboardKey.shift) {
-        isLeftShiftPressed = true;
-      } else if (key == LogicalKeyboardKey.shiftRight) {
-        isRightShiftPressed = true;
-      } else if (key == LogicalKeyboardKey.altLeft ||
-          key == LogicalKeyboardKey.alt) {
-        isLeftAltPressed = true;
-      } else if (key == LogicalKeyboardKey.altRight) {
-        isRightAltPressed = true;
-      } else if (key == LogicalKeyboardKey.controlLeft ||
-          key == LogicalKeyboardKey.control) {
-        isLeftControlPressed = true;
-      } else if (key == LogicalKeyboardKey.controlRight) {
-        isRightControlPressed = true;
-      } else if (key == LogicalKeyboardKey.metaLeft ||
-          key == LogicalKeyboardKey.meta) {
-        isLeftMetaPressed = true;
-      } else if (key == LogicalKeyboardKey.metaRight) {
-        isRightMetaPressed = true;
-      } else {
-        // create a map for the key
-        Map<String, dynamic> macroMap = {
-          "keyLabel": key.keyLabel,
-          "keyCode": key.keyId,
-          "modifiers": {
-            "shiftLeft": isLeftShiftPressed,
-            "shiftRight": isRightShiftPressed,
-            "altLeft": isLeftAltPressed,
-            "altRight": isRightAltPressed,
-            "controlLeft": isLeftControlPressed,
-            "controlRight": isRightControlPressed,
-            "metaLeft": isLeftMetaPressed,
-            "metaRight": isRightMetaPressed,
-          },
-          "event": KeyType.keyInvoke,
-        };
-        // set the modifier back to false
-        isLeftShiftPressed = false;
-        isLeftAltPressed = false;
-        isLeftControlPressed = false;
-        isLeftMetaPressed = false;
-        isRightShiftPressed = false;
-        isRightAltPressed = false;
-        isRightControlPressed = false;
-        isRightMetaPressed = false;
+      switch (keyRecording.keyEventType) {
+        case KeyEventType.keyDown:
+          await holdKey(keyRecording);
+          break;
 
-        // add the key to the macro list
-        macroList = [...macroList, macroMap];
+        case KeyEventType.keyUp:
+          await releaseKey(keyRecording);
+          break;
+
+        case KeyEventType.keyInvoke:
+          await invokeKey(keyRecording);
+          break;
       }
     }
-    // return the macro list
-    return macroList;
+  }
+
+  // Platform Functions
+  Future<void> invokeKey(KeyRecording keyCode) async {
+    return KeyboardInvokerPlatform.instance.invokeKey(keyCode);
+  }
+
+  Future<void> holdKey(KeyRecording keyCode) async {
+    return KeyboardInvokerPlatform.instance.holdKey(keyCode);
+  }
+
+  Future<void> releaseKey(KeyRecording keyCode) async {
+    return KeyboardInvokerPlatform.instance.releaseKey(keyCode);
   }
 }

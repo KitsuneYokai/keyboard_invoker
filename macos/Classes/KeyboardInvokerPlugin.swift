@@ -40,73 +40,53 @@ public class KeyboardInvokerPlugin: NSObject, FlutterPlugin {
     let instance: KeyboardInvokerPlugin = KeyboardInvokerPlugin()
     registrar.addMethodCallDelegate(instance, channel: channel)
   }
+
   public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-
-  switch call.method {
-    // case to invoke a key press 
-    case "invokeKey":
-      // Check accessibility permissions
-      guard hasAccessibilityPermissions() else {
-        // show the accessibility permissions dialog
-        showAccessibilityPermissionDialog()
-        // return false to indicate that the key was not pressed
-        result(false)
+    switch call.method {
+      case "validatePermissions":
+        if hasAccessibilityPermissions() {
+          result(true)
+        } else {
+          showAccessibilityPermissionDialog()
+          result(false)
+        }
         return
-      }
-      // get the arguments
-      guard let args = call.arguments as? [String: Any] else {
-        result(false)
-        return
-      }
-      // get the key code
-      guard let keyCode = args["platformKeyCode"] as? Int else {
-        result(false)
-        return
-      }
 
-      let key: CGKeyCode = CGKeyCode(UInt32(keyCode))
-      var modifierFlags: CGEventFlags = CGEventFlags()
+      case "invokeKey", "holdKey", "releaseKey":
+        // Get the arguments from Flutter
+        guard let args = call.arguments as? [String: Any],
+              let keyCode = args["keyCode"] as? Int else {
+          result(FlutterError(code: "INVALID_ARGUMENT",
+                             message: "Expected keyCode",
+                             details: nil))
+          return
+        }
 
-      // get the modifier keys
-      let leftShiftPressed = args["leftShiftPressed"] as? Bool
-      let rightShiftPressed = args["rightShiftPressed"] as? Bool
-      
-      let leftAltPressed = args["leftAltPressed"] as? Bool
-      let rightAltPressed = args["rightAltPressed"] as? Bool
+        // Handle the different key events
+        switch call.method {
+          case "invokeKey":
+            let keyDown = CGEvent(keyboardEventSource: nil, virtualKey: CGKeyCode(keyCode), keyDown: true)
+            let keyUp = CGEvent(keyboardEventSource: nil, virtualKey: CGKeyCode(keyCode), keyDown: false)
+            keyDown?.post(tap: .cghidEventTap)
+            keyUp?.post(tap: .cghidEventTap)
+            result(true)
 
-      let leftControlPressed = args["leftControlPressed"] as? Bool
-      let rightControlPressed = args["rightControlPressed"] as? Bool
+          case "holdKey":
+            let keyEvent = CGEvent(keyboardEventSource: nil, virtualKey: CGKeyCode(keyCode), keyDown: true)
+            keyEvent?.post(tap: .cghidEventTap)
+            result(true)
 
-      let leftMetaPressed = args["leftMetaPressed"] as? Bool
-      let rightMetaPressed = args["rightMetaPressed"] as? Bool
+          case "releaseKey":
+            let keyEvent = CGEvent(keyboardEventSource: nil, virtualKey: CGKeyCode(keyCode), keyDown: false)
+            keyEvent?.post(tap: .cghidEventTap)
+            result(true)
 
-      // set the modifier flags
-      if (leftShiftPressed ?? false || rightShiftPressed ?? false) {
-        modifierFlags.insert(CGEventFlags.maskShift)
-      }
-      if (leftAltPressed ?? false || rightAltPressed ?? false) {
-        modifierFlags.insert(CGEventFlags.maskAlternate)
-      }
-      if (leftControlPressed ?? false || rightControlPressed ?? false) {
-        modifierFlags.insert(CGEventFlags.maskControl)
-      }
-      if (leftMetaPressed ?? false || rightMetaPressed ?? false) {
-        modifierFlags.insert(CGEventFlags.maskCommand)
-      }
+          default:
+            result(FlutterMethodNotImplemented)
+        }
 
-      // key press event
-      let eventKeyPress: CGEvent? = CGEvent(keyboardEventSource: nil, virtualKey: key, keyDown: true);
-      eventKeyPress!.flags = modifierFlags
-      eventKeyPress!.post(tap: CGEventTapLocation.cghidEventTap)
-
-      // key release event
-      let eventKeyRelease: CGEvent? = CGEvent(keyboardEventSource: nil, virtualKey: key, keyDown: false);
-      eventKeyRelease!.flags = modifierFlags
-      eventKeyRelease!.post(tap: CGEventTapLocation.cghidEventTap)
-
-      result(true)
-    default:
-      result(FlutterMethodNotImplemented)
+      default:
+        result(FlutterMethodNotImplemented)
     }
   }
 }

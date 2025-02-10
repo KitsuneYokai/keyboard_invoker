@@ -1,6 +1,6 @@
 PODS:
   - FlutterMacOS (1.0.0)
-  - keyboard_invoker (0.0.1):
+  - keyboard_invoker (1.0.0):
     - FlutterMacOS
 
 DEPENDENCIES:
@@ -15,8 +15,8 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   FlutterMacOS: 8f6f14fa908a6fb3fba0cd85dbd81ec4b251fb24
-  keyboard_invoker: 6161f4ad66c75c5b11a9d05e8cc6458d658b1780
+  keyboard_invoker: 4de37ff0a68c9598ee5139012c96363f0cb38e13
 
 PODFILE CHECKSUM: 236401fc2c932af29a9fcf0e97baeeb2d750d367
 
-COCOAPODS: 1.12.1
+COCOAPODS: 1.16.2

@@ -1,10 +1,12 @@
 import 'dart:io';
+import 'package:flutter/services.dart';
 
 import 'package:flutter/material.dart';
 // import provider for the keyboard invoker
-import 'package:flutter/services.dart';
-import 'package:keyboard_invoker/keyboard_invoker.dart';
 import 'package:provider/provider.dart';
+import 'package:keyboard_invoker/keyboard_invoker.dart';
+import 'package:keyboard_invoker/mappings/key_mapping.dart';
+import 'package:keyboard_invoker/mappings/key_recording.dart';
 
 void main() {
   runApp(
@@ -103,8 +105,6 @@ class _KeyboardInvokerExampleState extends State<KeyboardInvokerExample> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 if (Platform.isLinux) ...[
                   Text("Is X11: ${keyboardInvokerPlugin.isX11}"),
@@ -112,6 +112,18 @@ class _KeyboardInvokerExampleState extends State<KeyboardInvokerExample> {
                       "Is xdotool installed: ${keyboardInvokerPlugin.isXdotoolInstalled}"),
                 ],
                 Text("Recording: ${keyboardInvokerPlugin.isRecording}"),
+                // add a checkbox to enable/disable the delay recording,
+              ],
+            ),
+            Row(
+              children: [
+                const Text("Record Delay:"),
+                Checkbox(
+                  value: keyboardInvokerPlugin.includeDelays,
+                  onChanged: (value) {
+                    keyboardInvokerPlugin.includeDelays = value!;
+                  },
+                )
               ],
             ),
             TextField(
@@ -127,7 +139,7 @@ class _KeyboardInvokerExampleState extends State<KeyboardInvokerExample> {
               child: Column(
                 children: keyboardInvokerPlugin.recordedKeys
                     .map((e) => Text(
-                          "Key: ${e["keyLabel"]} Code: ${e["keyCode"]} Event: ${e["event"]} Modifiers: ${e["modifiers"]}",
+                          "EventType: ${e.keyEventType}: ${e.logicalKeyId?.keyLabel} - Linux: ${e.linux} - Windows: ${e.windows} - Mac: ${e.mac} - delay: ${e.delay}",
                           style: const TextStyle(fontSize: 20),
                         ))
                     .toList(),
@@ -139,13 +151,13 @@ class _KeyboardInvokerExampleState extends State<KeyboardInvokerExample> {
               children: [
                 ElevatedButton(
                     onPressed: keyboardInvokerPlugin.isRecording
-                        ? () async {
+                        ? () {
                             // stop recording
-                            await keyboardInvokerPlugin.stopRecording();
+                            keyboardInvokerPlugin.stopRecording();
                           }
-                        : () async {
+                        : () {
                             // start recording
-                            await keyboardInvokerPlugin.startRecording();
+                            keyboardInvokerPlugin.startRecording();
                           },
                     child: keyboardInvokerPlugin.isRecording
                         ? const Text("Stop Macro Recording")
@@ -153,7 +165,7 @@ class _KeyboardInvokerExampleState extends State<KeyboardInvokerExample> {
                 ElevatedButton(
                     onPressed: () {
                       // clear the recorded keys
-                      keyboardInvokerPlugin.recordedKeys = [];
+                      keyboardInvokerPlugin.clearRecording();
                     },
                     child: const Text("Clear Recorded Macro")),
                 ElevatedButton(
@@ -163,18 +175,14 @@ class _KeyboardInvokerExampleState extends State<KeyboardInvokerExample> {
 
                     try {
                       // Stop recording
-                      await keyboardInvokerPlugin.stopRecording();
+                      keyboardInvokerPlugin.stopRecording();
 
                       // Invoke the recorded macro
-                      await keyboardInvokerPlugin.invokeMacroList(
-                        keyboardInvokerPlugin.recordedKeys,
-                      );
+                      await keyboardInvokerPlugin.executeRecording();
                     } catch (e) {
                       String errorMessage = '';
 
-                      if (e is X11NotActiveInstalled) {
-                        errorMessage = e.message;
-                      } else if (e is XdotoolNotInstalled) {
+                      if (e is LinuxError) {
                         errorMessage = e.message;
                       } else {
                         errorMessage = 'An error occurred: ${e.toString()}';
@@ -196,23 +204,20 @@ class _KeyboardInvokerExampleState extends State<KeyboardInvokerExample> {
                       _focusNode.requestFocus();
                       try {
                         // Stop recording
-                        await keyboardInvokerPlugin.stopRecording();
+                        keyboardInvokerPlugin.stopRecording();
 
-                        // convert the macro list to a list of maps
-                        List<Map<String, dynamic>> macroList =
-                            await keyboardInvokerPlugin
-                                .logicalKeyboardKeysToMacro(keyboardKeyList);
-
+                        // convert the macro list to a list of KeyRecording
+                        List<KeyRecording> macroList =
+                            KeyMappings.convertToKeyRecordingList(
+                                keyboardKeyList);
                         // Invoke the recorded macro
-                        await keyboardInvokerPlugin.invokeMacroList(
+                        await keyboardInvokerPlugin.invokeKeyRecordingList(
                           macroList,
                         );
                       } catch (e) {
                         String errorMessage = '';
 
-                        if (e is X11NotActiveInstalled) {
-                          errorMessage = e.message;
-                        } else if (e is XdotoolNotInstalled) {
+                        if (e is LinuxError) {
                           errorMessage = e.message;
                         } else {
                           errorMessage = 'An error occurred: ${e.toString()}';
