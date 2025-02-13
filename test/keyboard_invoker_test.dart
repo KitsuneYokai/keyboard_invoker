@@ -3,7 +3,7 @@ import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
 import 'package:keyboard_invoker/keyboard_invoker_platform_interface.dart';
 import 'package:keyboard_invoker/keyboard_invoker_method_channel.dart';
-import 'package:keyboard_invoker/mappings/key_recording.dart';
+import 'package:keyboard_invoker/key_recording.dart';
 
 class MockKeyboardInvokerPlatform
     with MockPlatformInterfaceMixin
@@ -24,6 +24,7 @@ class MockKeyboardInvokerPlatform
     throw UnimplementedError();
   }
 
+  @override
   Future<bool> validateMacOsPermissions() {
     throw UnimplementedError();
   }

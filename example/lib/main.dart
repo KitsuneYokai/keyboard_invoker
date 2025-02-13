@@ -1,12 +1,12 @@
 import 'dart:io';
-import 'package:flutter/services.dart';
-
 import 'package:flutter/material.dart';
 // import provider for the keyboard invoker
 import 'package:provider/provider.dart';
+
 import 'package:keyboard_invoker/keyboard_invoker.dart';
-import 'package:keyboard_invoker/mappings/key_mapping.dart';
-import 'package:keyboard_invoker/mappings/key_recording.dart';
+import 'package:keyboard_invoker/mapping/key_recordings_map.dart';
+import 'package:keyboard_invoker/mapping/key_map.dart';
+import 'package:keyboard_invoker/key_recording.dart';
 
 void main() {
   runApp(
@@ -14,6 +14,24 @@ void main() {
   );
 }
 
+/// TODO: Create a Better Example for the v2.0.0 (2.0.0 because of so many breaking changes)
+/// Things to note:
+///   - do not include a text field that gets focused when invoking the macro recording/Default,
+///     and point out in the readme, that it should not be used to input text into its own application
+///     or advise against it (have to do some testing on that one)
+///
+///     If a user dose, and invokes a sequence including a modifier `shift` for example, the next char gets
+///     skiped, and the next char follows.
+///
+///     If its a sequence of keys, that gets invoked, when the user holds down a modifier `shift` for example,
+///     The next char (after that one that dissapears) is cappitalized, untill the held down KeyRecord is played
+///     This also includes the alt modifier
+///
+///     This happens on:
+///       - Windows
+///       - Linux (have to test)
+///       - MacOs (have to test)
+///
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -60,39 +78,49 @@ class _KeyboardInvokerExampleState extends State<KeyboardInvokerExample> {
   }
 
   // This is the LogicalKeyboardKey List
-  List<LogicalKeyboardKey> keyboardKeyList = [
-    LogicalKeyboardKey.shiftLeft,
-    LogicalKeyboardKey.keyB,
-    LogicalKeyboardKey.keyR,
-    LogicalKeyboardKey.keyA,
-    LogicalKeyboardKey.keyT,
-    LogicalKeyboardKey.keyW,
-    LogicalKeyboardKey.keyU,
-    LogicalKeyboardKey.keyR,
-    LogicalKeyboardKey.keyS,
-    LogicalKeyboardKey.keyT,
-    LogicalKeyboardKey.space,
-    LogicalKeyboardKey.keyU,
-    LogicalKeyboardKey.keyN,
-    LogicalKeyboardKey.keyD,
-    LogicalKeyboardKey.space,
-    LogicalKeyboardKey.keyE,
-    LogicalKeyboardKey.keyI,
-    LogicalKeyboardKey.keyN,
-    LogicalKeyboardKey.space,
-    LogicalKeyboardKey.keyG,
-    LogicalKeyboardKey.keyR,
-    LogicalKeyboardKey.keyO,
-    LogicalKeyboardKey.keyS,
-    LogicalKeyboardKey.keyS,
-    LogicalKeyboardKey.keyE,
-    LogicalKeyboardKey.keyS,
-    LogicalKeyboardKey.space,
-    LogicalKeyboardKey.keyB,
-    LogicalKeyboardKey.keyI,
-    LogicalKeyboardKey.keyE,
-    LogicalKeyboardKey.keyR,
+  List<KeyRecording> keyboardKeyList = [
+    KeyMap.shiftLeft.keyRecording(keyEventType: KeyEventType.keyDown),
+    KeyMap.keyB.keyRecording(),
+    KeyMap.shiftLeft.keyRecording(keyEventType: KeyEventType.keyUp),
+    KeyMap.keyR.keyRecording(),
+    KeyMap.keyA.keyRecording(),
+    KeyMap.keyT.keyRecording(),
+    KeyMap.keyW.keyRecording(),
+    KeyMap.keyU.keyRecording(),
+    KeyMap.keyR.keyRecording(),
+    KeyMap.keyS.keyRecording(),
+    KeyMap.keyT.keyRecording(),
+    KeyMap.space.keyRecording(),
+    KeyMap.keyU.keyRecording(),
+    KeyMap.keyN.keyRecording(),
+    KeyMap.keyD.keyRecording(),
+    KeyMap.space.keyRecording(),
+    KeyMap.keyE.keyRecording(),
+    KeyMap.keyI.keyRecording(),
+    KeyMap.keyN.keyRecording(),
+    KeyMap.space.keyRecording(),
+    KeyMap.shiftLeft.keyRecording(keyEventType: KeyEventType.keyDown),
+    KeyMap.keyG.keyRecording(),
+    KeyMap.keyR.keyRecording(),
+    KeyMap.keyO.keyRecording(),
+    KeyMap.keyS.keyRecording(),
+    KeyMap.keyS.keyRecording(),
+    KeyMap.keyE.keyRecording(),
+    KeyMap.keyS.keyRecording(),
+    KeyMap.shiftLeft.keyRecording(keyEventType: KeyEventType.keyUp),
+    KeyMap.space.keyRecording(),
+    KeyMap.shiftLeft.keyRecording(keyEventType: KeyEventType.keyDown),
+    KeyMap.keyB.keyRecording(),
+    KeyMap.shiftLeft.keyRecording(keyEventType: KeyEventType.keyUp),
+    KeyMap.keyI.keyRecording(),
+    KeyMap.keyE.keyRecording(),
+    KeyMap.keyR.keyRecording(),
+    KeyMap.altLeft.keyRecording(keyEventType: KeyEventType.keyDown),
+    KeyMap.numpad3.keyRecording(),
+    KeyMap.altLeft.keyRecording(keyEventType: KeyEventType.keyUp),
   ];
+
+  Duration invokeDelay = Duration(seconds: 3);
 
   @override
   Widget build(BuildContext context) {
@@ -111,7 +139,7 @@ class _KeyboardInvokerExampleState extends State<KeyboardInvokerExample> {
                   Text(
                       "Is xdotool installed: ${keyboardInvokerPlugin.isXdotoolInstalled}"),
                 ],
-                Text("Recording: ${keyboardInvokerPlugin.isRecording}"),
+                Text("Recording: ${keyboardInvokerPlugin.recorder.isRecording}"),
                 // add a checkbox to enable/disable the delay recording,
               ],
             ),
@@ -119,9 +147,9 @@ class _KeyboardInvokerExampleState extends State<KeyboardInvokerExample> {
               children: [
                 const Text("Record Delay:"),
                 Checkbox(
-                  value: keyboardInvokerPlugin.includeDelays,
+                  value: keyboardInvokerPlugin.recorder.includeDelays,
                   onChanged: (value) {
-                    keyboardInvokerPlugin.includeDelays = value!;
+                    keyboardInvokerPlugin.recorder.includeDelays = value!;
                   },
                 )
               ],
@@ -137,7 +165,7 @@ class _KeyboardInvokerExampleState extends State<KeyboardInvokerExample> {
                 child: SingleChildScrollView(
               controller: macroRecordingScrollController,
               child: Column(
-                children: keyboardInvokerPlugin.recordedKeys
+                children: keyboardInvokerPlugin.recorder.recordedKeys
                     .map((e) => Text(
                           "EventType: ${e.keyEventType}: ${e.logicalKeyId?.keyLabel} - Linux: ${e.linux} - Windows: ${e.windows} - Mac: ${e.mac} - delay: ${e.delay}",
                           style: const TextStyle(fontSize: 20),
@@ -150,22 +178,22 @@ class _KeyboardInvokerExampleState extends State<KeyboardInvokerExample> {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 ElevatedButton(
-                    onPressed: keyboardInvokerPlugin.isRecording
+                    onPressed: keyboardInvokerPlugin.recorder.isRecording
                         ? () {
                             // stop recording
-                            keyboardInvokerPlugin.stopRecording();
+                            keyboardInvokerPlugin.recorder.stopRecording();
                           }
                         : () {
                             // start recording
-                            keyboardInvokerPlugin.startRecording();
+                            keyboardInvokerPlugin.recorder.startRecording();
                           },
-                    child: keyboardInvokerPlugin.isRecording
+                    child: keyboardInvokerPlugin.recorder.isRecording
                         ? const Text("Stop Macro Recording")
                         : const Text("Start Macro Recording")),
                 ElevatedButton(
                     onPressed: () {
                       // clear the recorded keys
-                      keyboardInvokerPlugin.clearRecording();
+                      keyboardInvokerPlugin.recorder.clearRecording();
                     },
                     child: const Text("Clear Recorded Macro")),
                 ElevatedButton(
@@ -173,12 +201,15 @@ class _KeyboardInvokerExampleState extends State<KeyboardInvokerExample> {
                     // Focus the text field
                     _focusNode.requestFocus();
 
+                    //delay with the invokeDelay
+                    await Future.delayed(invokeDelay);
+
                     try {
                       // Stop recording
-                      keyboardInvokerPlugin.stopRecording();
+                      keyboardInvokerPlugin.recorder.stopRecording();
 
                       // Invoke the recorded macro
-                      await keyboardInvokerPlugin.executeRecording();
+                      await keyboardInvokerPlugin.recorder.invokeRecording();
                     } catch (e) {
                       String errorMessage = '';
 
@@ -202,17 +233,16 @@ class _KeyboardInvokerExampleState extends State<KeyboardInvokerExample> {
                     onPressed: () async {
                       // Focus the text field
                       _focusNode.requestFocus();
+
+                      await Future.delayed(invokeDelay);
+
                       try {
                         // Stop recording
-                        keyboardInvokerPlugin.stopRecording();
+                        keyboardInvokerPlugin.recorder.stopRecording();
 
-                        // convert the macro list to a list of KeyRecording
-                        List<KeyRecording> macroList =
-                            KeyMappings.convertToKeyRecordingList(
-                                keyboardKeyList);
                         // Invoke the recorded macro
-                        await keyboardInvokerPlugin.invokeKeyRecordingList(
-                          macroList,
+                        await keyboardInvokerPlugin.invokeKeys(
+                          keyboardKeyList,
                         );
                       } catch (e) {
                         String errorMessage = '';

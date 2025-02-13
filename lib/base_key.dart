@@ -2,9 +2,6 @@ import 'package:flutter/services.dart';
 
 /// This class represents a keyboard key with platform-specific identifiers.
 ///
-/// This class stores various identifiers for a keyboard key across different platforms
-/// (Linux, Windows, and MacOS) along with darts logical key identifier and description.
-///
 /// Properties:
 /// * [logicalKeyId] - The logical key identifier from Darts's keyboard API
 /// * [description] - A human-readable description of the key
@@ -23,27 +20,13 @@ import 'package:flutter/services.dart';
 /// );
 /// ```
 class BaseKey {
-  // var declaration
-  LogicalKeyboardKey? _logicalKeyId;
-  String? _description;
-  String? _linux;
-  int? _windows;
-  int? _mac;
+  // Public fields
+  final LogicalKeyboardKey? logicalKeyId;
+  final String? description;
+  final String? linux;
+  final int? windows;
+  final int? mac;
 
-  // class constructor
-  BaseKey(LogicalKeyboardKey? logicalKeyId, String? description, String? linux,
-      int? windows, int? mac) {
-    _logicalKeyId = logicalKeyId;
-    _description = description;
-    _linux = linux;
-    _windows = windows;
-    _mac = mac;
-  }
-
-  // getters
-  LogicalKeyboardKey? get logicalKeyId => _logicalKeyId;
-  String? get description => _description;
-  String? get linux => _linux;
-  int? get windows => _windows;
-  int? get mac => _mac;
+  // Constructor
+  const BaseKey(this.logicalKeyId, this.description, this.linux, this.windows, this.mac);
 }

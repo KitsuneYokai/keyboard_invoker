@@ -5,9 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
 import 'keyboard_invoker_platform_interface.dart';
-
-// import the mappings for the key codes
-import 'mappings/key_recording.dart';
+import 'key_recording.dart';
 
 /// An implementation of [KeyboardInvokerPlatform] that uses method channels.
 class MethodChannelKeyboardInvoker extends KeyboardInvokerPlatform {

@@ -1,7 +1,7 @@
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
 import 'keyboard_invoker_method_channel.dart';
-import 'mappings/key_recording.dart';
+import 'key_recording.dart';
 
 abstract class KeyboardInvokerPlatform extends PlatformInterface {
   /// Constructs a KeyboardInvokerPlatform.

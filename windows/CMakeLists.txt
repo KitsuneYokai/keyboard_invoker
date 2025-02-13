@@ -2,7 +2,7 @@
 # installed that includes CMake 3.14 or later. You should not increase this
 # version, as doing so will cause the plugin to fail to compile for some
 # customers of the plugin.
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.6)
 
 # Project-level configuration.
 set(PROJECT_NAME "keyboard_invoker")
@@ -66,7 +66,8 @@ enable_testing()
 include(FetchContent)
 FetchContent_Declare(
   googletest
-  URL https://github.com/google/googletest/archive/release-1.11.0.zip
+  URL https://github.com/google/googletest/archive/release-1.12.0.zip
+  DOWNLOAD_EXTRACT_TIMESTAMP TRUE
 )
 # Prevent overriding the parent project's compiler/linker settings
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)

@@ -100,5 +100,6 @@
         "random": "cpp",
         "numbers": "cpp",
         "cinttypes": "cpp"
-    }
+    },
+    "cmake.sourceDirectory": "G:/Git/GitHub/KitsuneYokai/keyboard_invoker/linux"
 }
