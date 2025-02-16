@@ -30,12 +30,12 @@ class KeyRecording extends BaseKey {
   final Duration delay;
 
   const KeyRecording(
-    LogicalKeyboardKey? logicalKeyId,
-    String? description,
-    String? linux,
-    int? windows,
-    int? mac,
+    super.logicalKeyId,
+    super.description,
+    super.linux,
+    super.windows,
+    super.mac,
     this.keyEventType,
     this.delay,
-  ) : super(logicalKeyId, description, linux, windows, mac);
+  );
 }

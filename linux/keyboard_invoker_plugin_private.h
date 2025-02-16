@@ -7,5 +7,8 @@
 // https://github.com/flutter/flutter/issues/88724 for current limitations
 // in the unit-testable API.
 
+// TODO: WRITE TESTS
 // Handle the platform method call.
-FlMethodResponse *invoke_key(const char* keyCode);
+// static FlMethodResponse *invoke_key(const char* keyCode);
+// static FlMethodResponse *hold_key(const char* keyCode);
+// static FlMethodResponse *release_key(const char* keyCode);

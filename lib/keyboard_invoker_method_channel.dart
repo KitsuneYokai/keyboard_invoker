@@ -19,7 +19,7 @@ class MethodChannelKeyboardInvoker extends KeyboardInvokerPlatform {
 
     switch (os) {
       case 'linux':
-        arguments['keyCode'] = keyCode.linux;
+        arguments['keyCode'] = keyCode.linux.toString();
         break;
       case 'windows':
         arguments['keyCode'] = keyCode.windows;
