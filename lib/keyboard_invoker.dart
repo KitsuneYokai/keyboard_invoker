@@ -6,6 +6,11 @@ import 'keyboard_invoker_platform_interface.dart';
 import 'key_recording.dart';
 import 'keyboard_recorder.dart';
 
+// Export the key recordings map, the key_map and the key recording class
+export 'mapping/key_recordings_map.dart';
+export 'mapping/key_map.dart';
+export 'key_recording.dart';
+
 /// This class defines a Exception, that can be thrown, its specific to linux
 class LinuxError implements Exception {
   final String code;
@@ -95,7 +100,7 @@ class KeyboardInvoker extends ChangeNotifier {
   /// This function invokes keyboard keys on the host system.
   ///
   /// Example usage:
-  /// 
+  ///
   /// ```dart
   /// KeyboardInvoker invoker = KeyboardInvoker();
   /// invoker.invokeKeys([
