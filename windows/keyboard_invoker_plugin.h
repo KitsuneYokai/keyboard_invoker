@@ -8,7 +8,6 @@
 
 namespace keyboard_invoker
 {
-
     class KeyboardInvokerPlugin : public flutter::Plugin
     {
     public:
@@ -27,7 +26,6 @@ namespace keyboard_invoker
             const flutter::MethodCall<flutter::EncodableValue> &method_call,
             std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result);
     };
-
 } // namespace keyboard_invoker
 
 #endif // FLUTTER_PLUGIN_KEYBOARD_INVOKER_PLUGIN_H_

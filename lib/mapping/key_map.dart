@@ -14,8 +14,8 @@ enum KeyMap {
   alt,
   pause,
   capsLock,
-  imeHangulMode,  // no idea what this is (windows)
-  imeOn,  // no idea what this is (windows)
+  imeHangulMode, // no idea what this is (windows)
+  imeOn, // no idea what this is (windows)
   imeJunjaMode, // no idea what this is (windows)
   imeFinalMode, // no idea what this is (windows)
   imeHanjaMode, // no idea what this is (windows)
@@ -23,8 +23,8 @@ enum KeyMap {
   imeOff, // no idea what this is (windows)
   escape,
   imeConvert, // no idea what this is (windows)
-  imeNonConvert,  // no idea what this is (windows)
-  imeAccept,  // no idea what this is (windows)
+  imeNonConvert, // no idea what this is (windows)
+  imeAccept, // no idea what this is (windows)
   imeModeChangeRequest, // no idea what this is (windows)
   space,
   pageUp,

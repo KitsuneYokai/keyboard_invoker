@@ -5,11 +5,13 @@ import 'package:flutter/foundation.dart';
 import 'keyboard_invoker_platform_interface.dart';
 import 'key_recording.dart';
 import 'keyboard_recorder.dart';
+import 'mapping/key_map.dart';
+import 'mapping/key_recordings_map.dart';
 
-// Export the key recordings map, the key_map and the key recording class
-export 'mapping/key_recordings_map.dart';
-export 'mapping/key_map.dart';
+// Export the key recordings map
 export 'key_recording.dart';
+export 'mapping/key_map.dart';
+export 'mapping/key_recordings_map.dart';
 
 /// This class defines a Exception, that can be thrown, its specific to linux
 class LinuxError implements Exception {
@@ -61,8 +63,8 @@ class KeyboardInvoker extends ChangeNotifier {
     }
   }
 
-  /// Internal function that Throws a Linux Exception, if x11 isnt set as desktop
-  /// env or xdotool isnt installed
+  /// Internal function that Throws a Linux Exception, if x11 isn't set as desktop
+  /// env or xdotool isn't installed
   void _validateLinuxDependencies() {
     // check if x11 is installed
     if (!_isX11) {
@@ -111,10 +113,28 @@ class KeyboardInvoker extends ChangeNotifier {
   /// TODO: check if a macro is bein invoked, and then eather:
   ///   - dont invoke the macro at all
   ///   - wait for the macro to finish and then invoke the new macro
-  Future<void> invokeKeys(List<KeyRecording> recordings) async {
+  Future<void> invokeKeys(List<KeyRecording> recordings,
+      {bool? forceNumState}) async {
+    late bool? previousNumState;
+    late bool? changedNumState;
+
+    if (forceNumState != null) {
+      // Get the previous state of the NumLock
+      previousNumState = await checkNumLockState();
+    }
+
+    // Set the _isMacroBeingInvoked to true and notify
     _isMacroBeingInvoked = true;
     notifyListeners();
 
+    // If the forceNumState differs from the previousNumState, we invoke the num lock
+    if (previousNumState != null && forceNumState != previousNumState) {
+      await KeyboardInvokerPlatform.instance
+          .invokeKey(KeyMap.numLock.keyRecording());
+      changedNumState = true;
+    }
+
+    // Invoke the Keys Inside the List
     for (KeyRecording keyRecording in recordings) {
       // Wait for the recorded delay before executing the key
       await Future.delayed(keyRecording.delay);
@@ -134,6 +154,13 @@ class KeyboardInvoker extends ChangeNotifier {
       }
     }
 
+    // If we changed the changedNumState var, we gonna revert it to its previous state
+    if (changedNumState != null && changedNumState) {
+      await KeyboardInvokerPlatform.instance
+          .invokeKey(KeyMap.numLock.keyRecording());
+    }
+
+    // Set the _isMacroBeingInvoked to false and notify
     _isMacroBeingInvoked = false;
     notifyListeners();
   }
@@ -149,5 +176,11 @@ class KeyboardInvoker extends ChangeNotifier {
 
   Future<void> releaseKey(KeyRecording keyCode) async {
     return KeyboardInvokerPlatform.instance.releaseKey(keyCode);
+  }
+
+  /// This Function checks NumLock state of the host os, and returns the result as
+  /// a bool.
+  Future<bool> checkNumLockState() async {
+    return KeyboardInvokerPlatform.instance.checkNumLockState();
   }
 }

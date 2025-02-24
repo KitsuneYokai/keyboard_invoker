@@ -1,6 +1,6 @@
 #include "keyboard_invoker_plugin.h"
 
-// This must be included before many other Windows headers, 
+// This must be included before many other Windows headers,
 // otherwise the execution of the fuinction fails
 #include <windows.h>
 
@@ -40,28 +40,31 @@ namespace keyboard_invoker
   KeyboardInvokerPlugin::~KeyboardInvokerPlugin() {}
 
   // This function handles a key release
-  void release_key(int32_t keyCode, bool isNumpadKey) {
+  void release_key(int32_t keyCode, bool isNumpadKey)
+  {
     INPUT input = {};
     input.type = INPUT_KEYBOARD;
     input.ki.wVk = static_cast<WORD>(keyCode);
     input.ki.dwFlags = (isNumpadKey ? KEYEVENTF_EXTENDEDKEY : 0) | KEYEVENTF_KEYUP;
-    
+
     SendInput(1, &input, sizeof(INPUT));
   }
 
   // This function handles a key hold operation, on non num keys
-  void hold_key(int32_t keyCode, bool isNumpadKey) {
+  void hold_key(int32_t keyCode, bool isNumpadKey)
+  {
     // Only press key
     INPUT input = {};
     input.type = INPUT_KEYBOARD;
     input.ki.wVk = static_cast<WORD>(keyCode);
     input.ki.dwFlags = isNumpadKey ? KEYEVENTF_EXTENDEDKEY : 0;
-    
+
     SendInput(1, &input, sizeof(INPUT));
   }
 
   // This function handles a key invokion (keypress) opperation, on non num keys
-  void invoke_key(int32_t keyCode, bool isNumpadKey) {
+  void invoke_key(int32_t keyCode, bool isNumpadKey)
+  {
     INPUT inputs[2] = {};
 
     inputs[0].type = INPUT_KEYBOARD;
@@ -75,6 +78,12 @@ namespace keyboard_invoker
     SendInput(2, inputs, sizeof(INPUT));
   }
 
+  // This function checks if the Num Lock is enabled or not, and returns its state as a bool
+  bool check_num_lock_state()
+  {
+    return (GetKeyState(VK_NUMLOCK) & 0x0001) != 0;
+  }
+
   void KeyboardInvokerPlugin::HandleMethodCall(
       const flutter::MethodCall<flutter::EncodableValue> &method_call,
       std::unique_ptr<flutter::MethodResult<flutter::EncodableValue>> result)
@@ -83,6 +92,13 @@ namespace keyboard_invoker
     {
       // Windows doesn't require special permissions for keyboard simulation so we can just return true
       result->Success(flutter::EncodableValue(true));
+      return;
+    }
+
+    if (method_call.method_name().compare("checkNumLockState") == 0)
+    {
+      bool isNumLockEnabled = check_num_lock_state();
+      result->Success(flutter::EncodableValue(isNumLockEnabled));
       return;
     }
 
@@ -118,40 +134,60 @@ namespace keyboard_invoker
     // handle numpad keys
     if (isNumpadKey)
     {
-        INPUT input = {};
-        input.type = INPUT_KEYBOARD;
-        input.ki.wVk = 0;
-        
-        // convert the wk value to the scan value and set the dwFlag
-        switch (keyCode) {
-            case 0x60: input.ki.wScan = 0x52; break; // 0
-            case 0x61: input.ki.wScan = 0x4F; break; // 1
-            case 0x62: input.ki.wScan = 0x50; break; // 2
-            case 0x63: input.ki.wScan = 0x51; break; // 3
-            case 0x64: input.ki.wScan = 0x4B; break; // 4
-            case 0x65: input.ki.wScan = 0x4C; break; // 5
-            case 0x66: input.ki.wScan = 0x4D; break; // 6
-            case 0x67: input.ki.wScan = 0x47; break; // 7
-            case 0x68: input.ki.wScan = 0x48; break; // 8
-            case 0x69: input.ki.wScan = 0x49; break; // 9
-        }
-        input.ki.dwFlags = KEYEVENTF_SCANCODE;
+      INPUT input = {};
+      input.type = INPUT_KEYBOARD;
+      input.ki.wVk = 0;
 
-        if (method_call.method_name().compare("invokeKey") == 0)
-        {
-            SendInput(1, &input, sizeof(INPUT));
-            input.ki.dwFlags |= KEYEVENTF_KEYUP;
+      // convert the wk value to the scan value and set the dwFlag
+      switch (keyCode)
+      {
+      case 0x60:
+        input.ki.wScan = 0x52;
+        break; // 0
+      case 0x61:
+        input.ki.wScan = 0x4F;
+        break; // 1
+      case 0x62:
+        input.ki.wScan = 0x50;
+        break; // 2
+      case 0x63:
+        input.ki.wScan = 0x51;
+        break; // 3
+      case 0x64:
+        input.ki.wScan = 0x4B;
+        break; // 4
+      case 0x65:
+        input.ki.wScan = 0x4C;
+        break; // 5
+      case 0x66:
+        input.ki.wScan = 0x4D;
+        break; // 6
+      case 0x67:
+        input.ki.wScan = 0x47;
+        break; // 7
+      case 0x68:
+        input.ki.wScan = 0x48;
+        break; // 8
+      case 0x69:
+        input.ki.wScan = 0x49;
+        break; // 9
+      }
+      input.ki.dwFlags = KEYEVENTF_SCANCODE;
 
-        }
-        else if (method_call.method_name().compare("releaseKey") == 0)
-        {
-          input.ki.dwFlags |= KEYEVENTF_KEYUP;
-          SendInput(1, &input, sizeof(INPUT));
-        }
-
+      if (method_call.method_name().compare("invokeKey") == 0)
+      {
         SendInput(1, &input, sizeof(INPUT));
-        result->Success(flutter::EncodableValue(true));
-        return;
+        input.ki.dwFlags |= KEYEVENTF_KEYUP;
+      }
+      else if (method_call.method_name().compare("releaseKey") == 0)
+      {
+        input.ki.dwFlags |= KEYEVENTF_KEYUP;
+        SendInput(1, &input, sizeof(INPUT));
+      }
+
+      SendInput(1, &input, sizeof(INPUT));
+      result->Success(flutter::EncodableValue(true));
+      return;
     }
 
     // Handle non-numpad keys

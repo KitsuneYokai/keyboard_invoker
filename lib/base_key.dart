@@ -28,5 +28,6 @@ class BaseKey {
   final int? mac;
 
   // Constructor
-  const BaseKey(this.logicalKeyId, this.description, this.linux, this.windows, this.mac);
+  const BaseKey(
+      this.logicalKeyId, this.description, this.linux, this.windows, this.mac);
 }

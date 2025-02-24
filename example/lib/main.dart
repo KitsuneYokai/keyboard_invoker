@@ -4,9 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'package:keyboard_invoker/keyboard_invoker.dart';
-import 'package:keyboard_invoker/mapping/key_recordings_map.dart';
-import 'package:keyboard_invoker/mapping/key_map.dart';
-import 'package:keyboard_invoker/key_recording.dart';
 
 void main() {
   runApp(
@@ -24,7 +21,7 @@ void main() {
 ///     skiped, and the next char follows.
 ///
 ///     If its a sequence of keys, that gets invoked, when the user holds down a modifier `shift` for example,
-///     The next char (after that one that dissapears) is cappitalized, untill the held down KeyRecord is played
+///     The next char (after that one that disappears) is cappitalized, until the held down KeyRecord is played
 ///     This also includes the alt modifier
 ///
 ///     This happens on:
@@ -139,7 +136,8 @@ class _KeyboardInvokerExampleState extends State<KeyboardInvokerExample> {
                   Text(
                       "Is xdotool installed: ${keyboardInvokerPlugin.isXdotoolInstalled}"),
                 ],
-                Text("Recording: ${keyboardInvokerPlugin.recorder.isRecording}"),
+                Text(
+                    "Recording: ${keyboardInvokerPlugin.recorder.isRecording}"),
                 // add a checkbox to enable/disable the delay recording,
               ],
             ),
@@ -262,6 +260,46 @@ class _KeyboardInvokerExampleState extends State<KeyboardInvokerExample> {
                       }
                     },
                     child: const Text("Invoke Test Macro")),
+                ElevatedButton(
+                    child: const Text("Invoke Test Macro (FORCE NUM TRUE)"),
+                    onPressed: () async {
+                      // Focus the text field
+                      _focusNode.requestFocus();
+
+                      await Future.delayed(invokeDelay);
+
+                      try {
+                        // Stop recording
+                        keyboardInvokerPlugin.recorder.stopRecording();
+
+                        // Invoke the recorded macro
+                        await keyboardInvokerPlugin.invokeKeys(keyboardKeyList,
+                            forceNumState: true);
+                      } catch (e) {
+                        String errorMessage = '';
+
+                        if (e is LinuxError) {
+                          errorMessage = e.message;
+                        } else {
+                          errorMessage = 'An error occurred: ${e.toString()}';
+                        }
+                        // Use the captured context to show the dialog
+                        showAboutDialog(
+                          context: context,
+                          children: [
+                            Text('Error invoking macro: $errorMessage'),
+                          ],
+                        );
+                      }
+                    }),
+                ElevatedButton(
+                    child: const Text("Print NumLockState"),
+                    onPressed: () async {
+                      showAboutDialog(context: context, children: [
+                        Text((await keyboardInvokerPlugin.checkNumLockState())
+                            .toString())
+                      ]);
+                    })
               ],
             )
           ],

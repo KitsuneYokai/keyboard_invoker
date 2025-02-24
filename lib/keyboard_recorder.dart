@@ -15,7 +15,7 @@ import 'mapping/base_key_map.dart';
 /// keyboardInvoker.recorder.startRecording();
 /// ... type something ...
 /// keyboardInvoker.recorder.stopRecording();
-/// 
+///
 /// keyboardInvoker.recorder.invokeRecording();
 /// ```
 class KeyboardRecorder {

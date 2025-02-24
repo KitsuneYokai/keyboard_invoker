@@ -43,4 +43,9 @@ abstract class KeyboardInvokerPlatform extends PlatformInterface {
     return Future.error(
         'releaseKey() has not been implemented on this platform yet.');
   }
+
+  Future<bool> checkNumLockState() async {
+    return Future.error(
+        'checkNumLockState() has not been implemented on this platform yet.');
+  }
 }

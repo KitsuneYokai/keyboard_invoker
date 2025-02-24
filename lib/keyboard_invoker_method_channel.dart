@@ -54,4 +54,9 @@ class MethodChannelKeyboardInvoker extends KeyboardInvokerPlatform {
   Future<void> releaseKey(KeyRecording keyCode) async {
     await _performKeyAction('releaseKey', keyCode);
   }
+
+  @override
+  Future<bool> checkNumLockState() async {
+    return await methodChannel.invokeMethod("checkNumLockState");
+  }
 }
