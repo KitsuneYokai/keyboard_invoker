@@ -52,6 +52,12 @@ public class KeyboardInvokerPlugin: NSObject, FlutterPlugin {
         }
         return
 
+      case "checkNumLockState":
+        // get the current num lock state
+        let modifierFlags = NSEvent.modifierFlags.rawValue
+        let numLockState = (modifierFlags & NSEvent.ModifierFlags.numericPad.rawValue) != 0
+        result(numLockState)
+  
       case "invokeKey", "holdKey", "releaseKey":
         // Get the arguments from Flutter
         guard let args = call.arguments as? [String: Any],

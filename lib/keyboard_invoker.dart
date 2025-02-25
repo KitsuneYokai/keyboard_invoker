@@ -115,9 +115,19 @@ class KeyboardInvoker extends ChangeNotifier {
   ///   - wait for the macro to finish and then invoke the new macro
   Future<void> invokeKeys(List<KeyRecording> recordings,
       {bool? forceNumState}) async {
-    late bool? previousNumState;
-    late bool? changedNumState;
+    // If we are on mac os we gonna set the forceNumState to null since mac os
+    // doesn't support NumLock :(
+    // I hope this fix is ok, if not we need to find a better solution
+    if (Platform.isMacOS) {
+      forceNumState = null;
+    }
 
+    // If forceNumState is null, we get an error when we dont initialize the previousNumState var
+    bool? previousNumState = forceNumState;
+    bool? changedNumState = forceNumState;
+
+    // If forceNumState is not null, we gonna check the NumLock state, and set the
+    // previousNumState var to the current NumLock state
     if (forceNumState != null) {
       // Get the previous state of the NumLock
       previousNumState = await checkNumLockState();
@@ -127,8 +137,11 @@ class KeyboardInvoker extends ChangeNotifier {
     _isMacroBeingInvoked = true;
     notifyListeners();
 
-    // If the forceNumState differs from the previousNumState, we invoke the num lock
-    if (previousNumState != null && forceNumState != previousNumState) {
+    // If the forceNumState is not null and the NumLock state is different from the
+    // previous state, we gonna change the NumLock state
+    if (previousNumState != null &&
+        forceNumState != previousNumState &&
+        !Platform.isMacOS) {
       await KeyboardInvokerPlatform.instance
           .invokeKey(KeyMap.numLock.keyRecording());
       changedNumState = true;
@@ -139,6 +152,7 @@ class KeyboardInvoker extends ChangeNotifier {
       // Wait for the recorded delay before executing the key
       await Future.delayed(keyRecording.delay);
 
+      // Invoke the key based on the keyEventType
       switch (keyRecording.keyEventType) {
         case KeyEventType.keyDown:
           await KeyboardInvokerPlatform.instance.holdKey(keyRecording);
@@ -155,7 +169,7 @@ class KeyboardInvoker extends ChangeNotifier {
     }
 
     // If we changed the changedNumState var, we gonna revert it to its previous state
-    if (changedNumState != null && changedNumState) {
+    if (changedNumState != null && changedNumState && !Platform.isMacOS) {
       await KeyboardInvokerPlatform.instance
           .invokeKey(KeyMap.numLock.keyRecording());
     }
@@ -179,7 +193,8 @@ class KeyboardInvoker extends ChangeNotifier {
   }
 
   /// This Function checks NumLock state of the host os, and returns the result as
-  /// a bool.
+  /// a bool. On Mac os this function will always return false, since Mac os doesn't
+  /// support NumLock.
   Future<bool> checkNumLockState() async {
     return KeyboardInvokerPlatform.instance.checkNumLockState();
   }

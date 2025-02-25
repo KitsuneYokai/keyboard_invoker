@@ -1,7 +1,6 @@
 import 'package:flutter/services.dart';
 
 import 'base_key.dart';
-import 'key_recording.dart';
 import 'keyboard_invoker.dart';
 import 'mapping/base_key_map.dart';
 
@@ -120,7 +119,7 @@ class KeyboardRecorder {
   }
 
   /// Executes the recorded macro.
-  Future<void> invokeRecording() async {
-    _keyboardInvoker.invokeKeys(_recordedKeys);
+  Future<void> invokeRecording({bool? forceNumState}) async {
+    _keyboardInvoker.invokeKeys(_recordedKeys, forceNumState: forceNumState);
   }
 }

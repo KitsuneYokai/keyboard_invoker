@@ -273,8 +273,10 @@ class _KeyboardInvokerExampleState extends State<KeyboardInvokerExample> {
                         keyboardInvokerPlugin.recorder.stopRecording();
 
                         // Invoke the recorded macro
-                        await keyboardInvokerPlugin.invokeKeys(keyboardKeyList,
-                            forceNumState: true);
+                        await keyboardInvokerPlugin.invokeKeys(
+                          keyboardKeyList,
+                          forceNumState: true,
+                        );
                       } catch (e) {
                         String errorMessage = '';
 
