@@ -28,6 +28,7 @@ static FlMethodResponse *invoke_key(const char *keyCode)
 {
     std::string command = "xdotool key " + std::string(keyCode);
     int result = system(command.c_str());
+
     g_autoptr(FlValue) return_value = fl_value_new_bool(result == 0);
     return FL_METHOD_RESPONSE(fl_method_success_response_new(return_value));
 }
@@ -42,6 +43,7 @@ static FlMethodResponse *hold_key(const char *keyCode)
 {
     std::string command = "xdotool keydown " + std::string(keyCode);
     int result = system(command.c_str());
+
     g_autoptr(FlValue) return_value = fl_value_new_bool(result == 0);
     return FL_METHOD_RESPONSE(fl_method_success_response_new(return_value));
 }
@@ -56,7 +58,39 @@ static FlMethodResponse *release_key(const char *keyCode)
 {
     std::string command = "xdotool keyup " + std::string(keyCode);
     int result = system(command.c_str());
+
     g_autoptr(FlValue) return_value = fl_value_new_bool(result == 0);
+    return FL_METHOD_RESPONSE(fl_method_success_response_new(return_value));
+}
+
+/**
+ * This function returns the current num lock state of the system
+ */
+static FlMethodResponse *checkNumLockState()
+{
+    std::string command = "xset q | grep -A 0 'LED' | cut -c59-";
+    FILE *pipe = popen(command.c_str(), "r");
+    if (!pipe)
+    {
+        return FL_METHOD_RESPONSE(fl_method_error_response_new(
+            "COMMAND_FAILED",
+            "Failed to execute command",
+            nullptr));
+    }
+
+    char buffer[128];
+    std::string result = "";
+    while (!feof(pipe))
+    {
+        if (fgets(buffer, 128, pipe) != nullptr)
+            result += buffer;
+    }
+    pclose(pipe);
+
+    // Num Lock is on if bit 1 is set (value contains 2)
+    bool numLockOn = (result.find("2") != std::string::npos);
+
+    g_autoptr(FlValue) return_value = fl_value_new_bool(numLockOn);
     return FL_METHOD_RESPONSE(fl_method_success_response_new(return_value));
 }
 
@@ -86,6 +120,10 @@ static void keyboard_invoker_plugin_handle_method_call(
         // since linux dosnt require permissions to execute this, we just gonna return a success
         g_autoptr(FlValue) result = fl_value_new_bool(true);
         response = FL_METHOD_RESPONSE(fl_method_success_response_new(result));
+    }
+    else if (strcmp(method, "checkNumLockState") == 0)
+    {
+        response = checkNumLockState();
     }
     // if we get invoke-, hold- or release key, we gonna check for the key code argument,
     // and execute the coresponding function
@@ -118,7 +156,7 @@ static void keyboard_invoker_plugin_handle_method_call(
             {
                 // Finally, we get the key code as char array, compare the method call, and
                 // execute the function coresponding to the method call
-                const char* key_str = fl_value_get_string(key_code_value);
+                const char *key_str = fl_value_get_string(key_code_value);
 
                 // invokeKey
                 if (strcmp(method, "invokeKey") == 0)
