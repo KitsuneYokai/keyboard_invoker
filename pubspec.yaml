@@ -1,6 +1,6 @@
 name: keyboard_invoker
-description: A plugin that invokes keys on the host system.
-version: 1.0.0
+description: This plugin allows you to invoke keystrokes on the host machine from a Flutter application. It also has a built-in Recorder that allows you to record and replay keystrokes.
+version: 2.0.0
 repository: https://github.com/KitsuneYokai/keyboard_invoker
 
 environment:

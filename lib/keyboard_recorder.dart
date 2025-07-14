@@ -28,6 +28,7 @@ class KeyboardRecorder {
   bool _includeDelays = true;
   Duration _staticDelay = const Duration(milliseconds: 0);
 
+  // KeyboardRecorder constructor
   KeyboardRecorder(this._keyboardInvoker);
 
   // macro recording getters
@@ -55,7 +56,8 @@ class KeyboardRecorder {
     _keyboardInvoker.notifyListeners();
   }
 
-  /// Starts recording the macro.
+  /// This function starts the macro recording, by adding the key listener to the hardware keyboard,
+  /// and setting the state to recording.
   void startRecording() {
     // set the state to recording
     _isRecording = true;
@@ -63,11 +65,12 @@ class KeyboardRecorder {
     _keyboardInvoker.notifyListeners();
 
     // add the listener
-    HardwareKeyboard.instance.addHandler(recordKeys);
+    HardwareKeyboard.instance.addHandler(_recordKeys);
   }
 
-  /// Records the keys during the macro recording.
-  bool recordKeys(KeyEvent event) {
+  /// This is the internal function that records the keys, and adds them to the recorded keys list.
+  /// It also calculates the delay between the keys if the includeDelays is enabled.
+  bool _recordKeys(KeyEvent event) {
     BaseKey baseKey = BaseKeyMap.getBaseKeyfromlogicalKeyId(event.logicalKey);
 
     KeyEventType keyEventType = event is KeyDownEvent
@@ -100,25 +103,26 @@ class KeyboardRecorder {
     return true;
   }
 
-  /// Stops the macro recording.
+  /// This function stops the macro recording, by removing the key listener from the hardware keyboard,
+  /// and setts the state to not recording.
   void stopRecording() {
     // set the state
     _isRecording = false;
     _keyboardInvoker.notifyListeners();
 
     // remove the listener
-    HardwareKeyboard.instance.removeHandler(recordKeys);
+    HardwareKeyboard.instance.removeHandler(_recordKeys);
   }
 
   /// Clears the recorded macro.
   void clearRecording() {
     // clear the recorded keys
     _recordedKeys = [];
-    _lastKeyEventTime = null; // Reset the timer
+    _lastKeyEventTime = null;
     _keyboardInvoker.notifyListeners();
   }
 
-  /// Executes the recorded macro.
+  /// This function invokes the recorded macro List on the host system.
   Future<void> invokeRecording({bool? forceNumState}) async {
     _keyboardInvoker.invokeKeys(_recordedKeys, forceNumState: forceNumState);
   }

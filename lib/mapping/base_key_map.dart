@@ -4,6 +4,7 @@ import 'key_map.dart';
 import '../base_key.dart';
 
 extension BaseKeyMap on KeyMap {
+  /// This function gets a base key from a given [logicalKeyId]
   /// Returns a [BaseKey] from a given [logicalKeyId]
   static BaseKey getBaseKeyfromlogicalKeyId(LogicalKeyboardKey logicalKeyId) {
     for (var keyMap in KeyMap.values) {
