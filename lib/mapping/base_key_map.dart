@@ -4,18 +4,24 @@ import 'key_map.dart';
 import '../base_key.dart';
 
 extension BaseKeyMap on KeyMap {
-  /// This function gets a base key from a given [logicalKeyId]
-  /// Returns a [BaseKey] from a given [logicalKeyId]
-  static BaseKey getBaseKeyfromlogicalKeyId(LogicalKeyboardKey logicalKeyId) {
+  /// This function gets a base key from a given [logicalKeyboardKey]
+  /// Returns a [BaseKey] from a given [logicalKeyboardKey]
+  static BaseKey getBaseKeyFromLogicalKeyId(
+      LogicalKeyboardKey logicalKeyboardKey) {
     for (var keyMap in KeyMap.values) {
-      if (keyMap.baseKey.logicalKeyId == logicalKeyId) {
+      if (keyMap.baseKey.logicalKeyId == logicalKeyboardKey) {
         return keyMap.baseKey;
       }
     }
     return const BaseKey(null, "Unknown key", null, null, null);
   }
 
-  // Getter for a BaseKey
+  // Getter for the [BaseKey] associated with this [KeyMap]
+  /// Returns a [BaseKey] for the current [KeyMap] instance.
+  ///
+  /// TODO: I know this is a really long switch statement, but I'm not 100% sure how to split it up
+  /// so if you discovered this message and think this is bad as hell, please open an issue
+  /// with a suggestion on how to improve this, and I will try my best to implement it.
   BaseKey get baseKey {
     switch (this) {
       case KeyMap.leftMouseButton:

@@ -48,4 +48,9 @@ abstract class KeyboardInvokerPlatform extends PlatformInterface {
     return Future.error(
         'checkNumLockState() has not been implemented on this platform yet.');
   }
+
+  Future<bool> installXdoTool() async {
+    return Future.error(
+        'installXdoTool() has not been implemented on this platform yet.');
+  }
 }

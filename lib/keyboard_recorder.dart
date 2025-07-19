@@ -61,7 +61,7 @@ class KeyboardRecorder {
   void startRecording() {
     // set the state to recording
     _isRecording = true;
-    _lastKeyEventTime = DateTime.now(); // Initialize the time
+    _lastKeyEventTime = DateTime.now();
     _keyboardInvoker.notifyListeners();
 
     // add the listener
@@ -69,9 +69,9 @@ class KeyboardRecorder {
   }
 
   /// This is the internal function that records the keys, and adds them to the recorded keys list.
-  /// It also calculates the delay between the keys if the includeDelays is enabled.
+  /// It also calculates the delay between the keys if the incluqdeDelays is enabled.
   bool _recordKeys(KeyEvent event) {
-    BaseKey baseKey = BaseKeyMap.getBaseKeyfromlogicalKeyId(event.logicalKey);
+    BaseKey baseKey = BaseKeyMap.getBaseKeyFromLogicalKeyId(event.logicalKey);
 
     KeyEventType keyEventType = event is KeyDownEvent
         ? KeyEventType.keyDown

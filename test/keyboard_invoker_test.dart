@@ -5,12 +5,14 @@ import 'package:keyboard_invoker/keyboard_invoker_platform_interface.dart';
 import 'package:keyboard_invoker/keyboard_invoker_method_channel.dart';
 import 'package:keyboard_invoker/key_recording.dart';
 
+/// TODO: Im not sure, how i could write platform tests for the keyboard invoker.
+/// If someone comes up with an idea, please open an issue on the github repo.
+/// I would be very happy to implement it.
 class MockKeyboardInvokerPlatform
     with MockPlatformInterfaceMixin
     implements KeyboardInvokerPlatform {
   @override
   Future<bool> invokeKey(KeyRecording keyCode) {
-    // TODO: implement invokeKey
     throw UnimplementedError();
   }
 
@@ -28,6 +30,16 @@ class MockKeyboardInvokerPlatform
   Future<bool> validateMacOsPermissions() {
     throw UnimplementedError();
   }
+
+  @override
+  Future<bool> checkNumLockState() {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<bool> installXdoTool() {
+    throw UnimplementedError();
+  }
 }
 
 void main() {
@@ -37,13 +49,4 @@ void main() {
   test('$MethodChannelKeyboardInvoker is the default instance', () {
     expect(initialPlatform, isInstanceOf<MethodChannelKeyboardInvoker>());
   });
-
-  // TODO: Write Tests
-  // test('getPlatformVersion', () async {
-  //   KeyboardInvoker keyboardInvokerPlugin = KeyboardInvoker();
-  //   MockKeyboardInvokerPlatform fakePlatform = MockKeyboardInvokerPlatform();
-  //   KeyboardInvokerPlatform.instance = fakePlatform;
-  //
-  //   expect(await keyboardInvokerPlugin.getPlatformVersion(), '42');
-  // });
 }

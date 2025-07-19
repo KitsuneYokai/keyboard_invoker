@@ -4,7 +4,7 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'keyboard_invoker'
-  s.version          = '1.0.0'
+  s.version          = '2.0.0'
   s.summary          = 'A plugin that invokes keys on the host system.'
   s.description      = <<-DESC
 A plugin that invokes keys on the host system.

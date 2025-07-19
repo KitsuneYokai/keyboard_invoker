@@ -20,7 +20,6 @@ import 'package:flutter/services.dart';
 /// );
 /// ```
 class BaseKey {
-  // Public fields
   final LogicalKeyboardKey? logicalKeyId;
   final String? description;
   final String? linux;

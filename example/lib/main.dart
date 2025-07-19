@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'package:flutter/services.dart';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:keyboard_invoker/keyboard_invoker.dart';
@@ -33,18 +35,24 @@ class _HomePageState extends State<HomePage> {
   // In this case, it will type "Hello world"
   final List<KeyRecording> _demoSequence = [
     KeyMap.shiftLeft.keyRecording(keyEventType: KeyEventType.keyDown),
-    KeyMap.keyH.keyRecording(),
+    KeyMap.keyH
+        .keyRecording(), // defaults to keyInvoke = down + up in an instant
     KeyMap.shiftLeft.keyRecording(keyEventType: KeyEventType.keyUp),
     KeyMap.keyE.keyRecording(),
     KeyMap.keyL.keyRecording(),
     KeyMap.keyL.keyRecording(),
     KeyMap.keyO.keyRecording(),
-    KeyMap.space.keyRecording(),
+    KeyMap.space.keyRecording(delay: Duration(seconds: 1)), // Adding a delay
     KeyMap.keyW.keyRecording(),
     KeyMap.keyO.keyRecording(),
     KeyMap.keyR.keyRecording(),
     KeyMap.keyL.keyRecording(),
     KeyMap.keyD.keyRecording(),
+  ];
+
+  final List<LogicalKeyboardKey> _logicalKeyboardKeys = [
+    LogicalKeyboardKey.keyH,
+    LogicalKeyboardKey.keyI,
   ];
 
   // This bool is used to force the Num Lock state to be ON or OFF, it can be null
@@ -271,6 +279,30 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                     Tooltip(
+                      message: "Invoke Logical Keys",
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          try {
+                            // convert our logical keys to KeyRecording objects
+                            final keyRecordings =
+                                KeyRecordingsMap.fromLogicalKeyList(
+                              _logicalKeyboardKeys,
+                            );
+
+                            // invoke the keys, keep in mind that there is a optional delay
+                            // before invoking the keys, this is set by the slider value
+                            await Future.delayed(
+                                Duration(seconds: _sliderValue.round()));
+                            await keyboardInvoker.invokeKeys(keyRecordings,
+                                forceNumState: _forceNumState);
+                          } catch (e) {
+                            showError(context, e);
+                          }
+                        },
+                        child: const Icon(Icons.keyboard_command_key),
+                      ),
+                    ),
+                    Tooltip(
                       message: 'Get current Num Lock State',
                       child: ElevatedButton(
                         onPressed: () async {
@@ -278,7 +310,36 @@ class _HomePageState extends State<HomePage> {
                         },
                         child: const Icon(Icons.keyboard),
                       ),
-                    )
+                    ),
+                    Tooltip(
+                      message: 'Install XdoTool (Linux only)',
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          try {
+                            final isInstalled =
+                                await keyboardInvoker.installXdoTool();
+
+                            // wait for the isInstalled variable to be set
+                            if (isInstalled) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('XdoTool is installed'),
+                                ),
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('XdoTool is not installed'),
+                                ),
+                              );
+                            }
+                          } catch (e) {
+                            showError(context, e);
+                          }
+                        },
+                        child: const Icon(Icons.check_circle_outline),
+                      ),
+                    ),
                   ],
                 ),
               ),

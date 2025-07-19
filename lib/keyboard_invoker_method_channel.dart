@@ -59,4 +59,12 @@ class MethodChannelKeyboardInvoker extends KeyboardInvokerPlatform {
   Future<bool> checkNumLockState() async {
     return await methodChannel.invokeMethod("checkNumLockState");
   }
+
+  @override
+  Future<bool> installXdoTool() async {
+    if (Platform.isLinux) {
+      return await methodChannel.invokeMethod("installXdoTool");
+    }
+    return false;
+  }
 }

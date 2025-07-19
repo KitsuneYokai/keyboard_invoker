@@ -22,7 +22,7 @@ G_DEFINE_TYPE(KeyboardInvokerPlugin, keyboard_invoker_plugin, g_object_get_type(
  * This function invokes a key on the host system (press and release in one go)
  *
  * @param keyCode The key code xdotool should execute
- * @return FL_METHOD_RESPONSE returns true if the operation was sucessfully executed
+ * @return FL_METHOD_RESPONSE returns true if the operation was successfully executed
  */
 static FlMethodResponse *invoke_key(const char *keyCode)
 {
@@ -37,7 +37,7 @@ static FlMethodResponse *invoke_key(const char *keyCode)
  * This function holds a key on the host system
  *
  * @param keyCode The key code xdotool should hold
- * @return FL_METHOD_RESPONSE returns true if the operation was sucessfully executed
+ * @return FL_METHOD_RESPONSE returns true if the operation was successfully executed
  */
 static FlMethodResponse *hold_key(const char *keyCode)
 {
@@ -52,7 +52,7 @@ static FlMethodResponse *hold_key(const char *keyCode)
  * This function releases a key on the host system
  *
  * @param keyCode The key code xdotool should execute
- * @return FL_METHOD_RESPONSE returns true if the operation was sucessfully executed
+ * @return FL_METHOD_RESPONSE returns true if the operation was successfully executed
  */
 static FlMethodResponse *release_key(const char *keyCode)
 {
@@ -65,6 +65,8 @@ static FlMethodResponse *release_key(const char *keyCode)
 
 /**
  * This function returns the current num lock state of the system
+ *
+ * @return FL_METHOD_RESPONSE returns true if num lock is enabled, false otherwise
  */
 static FlMethodResponse *checkNumLockState()
 {
@@ -91,6 +93,78 @@ static FlMethodResponse *checkNumLockState()
     bool numLockOn = (result.find("2") != std::string::npos);
 
     g_autoptr(FlValue) return_value = fl_value_new_bool(numLockOn);
+    return FL_METHOD_RESPONSE(fl_method_success_response_new(return_value));
+}
+
+/**
+ * This function installs XdoTool on the os
+ * It checks if xdotool is already installed, and if not, it tries to install it using the system's package manager.
+ * If no supported package manager is found, it returns an error response.
+ *
+ * @return FL_METHOD_RESPONSE returns true if xdotool is installed, false otherwise
+ */
+static FlMethodResponse *installXdoTool()
+{
+    // Check if xdotool is already installed
+    if (system("which xdotool > /dev/null 2>&1") == 0)
+    {
+        g_autoptr(FlValue) return_value = fl_value_new_bool(true);
+        return FL_METHOD_RESPONSE(fl_method_success_response_new(return_value));
+    }
+
+    // check package manager
+    std::string packageManager;
+    if (system("which apt > /dev/null 2>&1") == 0 || system("which apt-get > /dev/null 2>&1") == 0)
+    {
+        packageManager = "apt";
+    }
+    else if (system("which dnf > /dev/null 2>&1") == 0)
+    {
+        packageManager = "dnf";
+    }
+    else if (system("which yum > /dev/null 2>&1") == 0)
+    {
+        packageManager = "yum";
+    }
+    else
+    {
+        return FL_METHOD_RESPONSE(fl_method_error_response_new(
+            "PACKAGE_MANAGER_NOT_FOUND",
+            "No supported package manager found",
+            nullptr));
+    }
+
+    // Run the installation synchronously (blocking)
+    std::string command = "sudo -k " + packageManager + " install -y xdotool";
+    // Try to detect a terminal emulator
+    const char *terminals[] = {"x-terminal-emulator", "gnome-terminal", "konsole", "xfce4-terminal", "xterm"};
+    std::string term_cmd;
+    for (const char *term : terminals)
+    {
+        std::string check = "which ";
+        check += term;
+        check += " > /dev/null 2>&1";
+        if (system(check.c_str()) == 0)
+        {
+            term_cmd = term;
+            break;
+        }
+    }
+    if (!term_cmd.empty())
+    {
+        std::string full_cmd = term_cmd + " -e \"" + command + "\"";
+        (void)system(full_cmd.c_str());
+    }
+    else
+    {
+        // Fallback: run in current terminal if possible
+        (void)system(command.c_str());
+    }
+
+    // After installation, check again if xdotool is installed
+    bool installed = (system("which xdotool > /dev/null 2>&1") == 0);
+
+    g_autoptr(FlValue) return_value = fl_value_new_bool(installed);
     return FL_METHOD_RESPONSE(fl_method_success_response_new(return_value));
 }
 
@@ -125,8 +199,12 @@ static void keyboard_invoker_plugin_handle_method_call(
     {
         response = checkNumLockState();
     }
+    else if (strcmp(method, "installXdoTool") == 0)
+    {
+        response = installXdoTool();
+    }
     // if we get invoke-, hold- or release key, we gonna check for the key code argument,
-    // and execute the coresponding function
+    // and execute the corresponding function
     else if (strcmp(method, "invokeKey") == 0 ||
              strcmp(method, "holdKey") == 0 ||
              strcmp(method, "releaseKey") == 0)
@@ -155,7 +233,7 @@ static void keyboard_invoker_plugin_handle_method_call(
             else
             {
                 // Finally, we get the key code as char array, compare the method call, and
-                // execute the function coresponding to the method call
+                // execute the function corresponding to the method call
                 const char *key_str = fl_value_get_string(key_code_value);
 
                 // invokeKey
@@ -177,8 +255,8 @@ static void keyboard_invoker_plugin_handle_method_call(
         }
     }
 
-    // If the method call dosn't meet any of the above condtions,
-    // we gona raise the MethodNotImplemented Exception
+    // If the method call don't meet any of the above conditions,
+    // we gonna raise the MethodNotImplemented Exception
     else
     {
         response = FL_METHOD_RESPONSE(fl_method_not_implemented_response_new());

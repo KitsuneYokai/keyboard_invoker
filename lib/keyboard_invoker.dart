@@ -12,6 +12,7 @@ import 'mapping/key_recordings_map.dart';
 export 'key_recording.dart';
 export 'mapping/key_map.dart';
 export 'mapping/key_recordings_map.dart';
+export 'mapping/base_key_map.dart';
 
 /// This class defines a Exception, that can be thrown, its specific to linux
 class LinuxError implements Exception {
@@ -28,7 +29,7 @@ class KeyboardInvoker extends ChangeNotifier {
   bool _isX11 = false;
   bool _isXdotoolInstalled = false;
 
-  // var to keep track if a makro is currently being invoked
+  // var to keep track if a macro is currently being invoked
   bool _isMacroBeingInvoked = false;
 
   // linux support getters
@@ -110,7 +111,7 @@ class KeyboardInvoker extends ChangeNotifier {
   ///       KeyMap.keyI.keyRecording(),
   /// ]);
   /// ```
-  /// TODO: check if a macro is bein invoked, and then eather:
+  /// TODO: check if a macro is being invoked, and then either:
   ///   - dont invoke the macro at all
   ///   - wait for the macro to finish and then invoke the new macro
   Future<void> invokeKeys(List<KeyRecording> recordings,
@@ -197,5 +198,9 @@ class KeyboardInvoker extends ChangeNotifier {
   /// support NumLock.
   Future<bool> checkNumLockState() async {
     return KeyboardInvokerPlatform.instance.checkNumLockState();
+  }
+
+  Future<bool> installXdoTool() async {
+    return KeyboardInvokerPlatform.instance.installXdoTool();
   }
 }

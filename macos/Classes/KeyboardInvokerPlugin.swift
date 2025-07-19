@@ -5,20 +5,28 @@ import Foundation
 import AppKit
 
 
-// A function to check if the app has accessibility permissions
+/**
+* This function checks if the application has accessibility permissions.
+*/
 func hasAccessibilityPermissions() -> Bool {
     let trustedCheckOptionPrompt: NSString = kAXTrustedCheckOptionPrompt.takeUnretainedValue() as NSString
     let options: [NSString : Bool] = [trustedCheckOptionPrompt: true]
     return AXIsProcessTrustedWithOptions(options as CFDictionary)
 }
 
-// A function to request accessibility permissions
+/**
+* This function requests accessibility permissions for the application.
+*/
 func requestAccessibilityPermissions() {
     let options: [NSString : Bool] = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as NSString: true]
     AXIsProcessTrustedWithOptions(options as CFDictionary)
 }
 
-// A function to show the accessibility permissions dialog
+/**
+* This function shows a dialog to the user requesting accessibility permissions.
+* It informs the user that they need to grant permissions for the application to function correctly.
+* If the user agrees, it opens the System Preferences to the Accessibility section.
+*/
 func showAccessibilityPermissionDialog() {
     let alert: NSAlert = NSAlert()
     alert.messageText = "Accessibility Permissions Required"
@@ -34,6 +42,11 @@ func showAccessibilityPermissionDialog() {
     }
 }
 
+/**
+* This class implements the Flutter plugin for keyboard invoker functionality.
+* It handles method calls from Flutter and performs the necessary actions such as invoking keys,
+* holding keys, releasing keys, checking num lock state, and validating accessibility permissions.
+*/
 public class KeyboardInvokerPlugin: NSObject, FlutterPlugin {
   public static func register(with registrar: FlutterPluginRegistrar) {
     let channel = FlutterMethodChannel(name: "keyboard_invoker", binaryMessenger: registrar.messenger)
