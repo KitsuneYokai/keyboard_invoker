@@ -64,11 +64,9 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    // Lets define the callback functions
     final KeyboardInvoker keyboardInvoker =
         Provider.of<KeyboardInvoker>(context);
 
-    // This function shows an error dialog
     void showError(BuildContext context, dynamic error) {
       showDialog(
         context: context,
@@ -86,7 +84,6 @@ class _HomePageState extends State<HomePage> {
     }
 
     // Callback functions
-    // This function toggles if a delay should be recorded
     void toggleRecordDelay(bool value) {
       keyboardInvoker.recorder.includeDelays = value;
     }
@@ -98,9 +95,6 @@ class _HomePageState extends State<HomePage> {
 
     // This function invokes the recorded keys on the host os
     void invokeRecording() async {
-      // Lets play the recording, with the delay set by the slider
-      // we also force the Num Lock state if needed, this can be useful
-      // when the Num Lock is switched off but is needed to be on or vice versa
       try {
         // Delay before invoking the keys
         await Future.delayed(Duration(seconds: _sliderValue.round()));
